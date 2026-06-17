@@ -1,0 +1,142 @@
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import ScreenContainer from '../../components/ScreenContainer';
+import Button from '../../components/Button';
+import { verifyOtp, sendOtp } from '../../store/slices/authSlice';
+import { showToast } from '../../utils/toastConfig';
+import { palette, radius, spacing, typography } from '../../theme';
+
+const CELL_COUNT = 6;
+
+export default function OTPScreen() {
+  const dispatch = useDispatch();
+  const { email, loading, otpAttempts } = useSelector(s => s.auth);
+
+  const [digits, setDigits] = useState(Array(CELL_COUNT).fill(''));
+  const [timer, setTimer] = useState(30);
+  const inputs = useRef([]);
+
+  useEffect(() => {
+    if (timer <= 0) return;
+    const t = setInterval(() => setTimer(s => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [timer]);
+
+  const handleChange = (text, idx) => {
+    const value = text.replace(/[^0-9]/g, '').slice(-1);
+    const next = [...digits];
+    next[idx] = value;
+    setDigits(next);
+    if (value && idx < CELL_COUNT - 1) inputs.current[idx + 1]?.focus();
+  };
+
+  const handleKeyPress = (e, idx) => {
+    if (e.nativeEvent.key === 'Backspace' && !digits[idx] && idx > 0) {
+      inputs.current[idx - 1]?.focus();
+    }
+  };
+
+  const onVerify = async () => {
+    const otp = digits.join('');
+    if (otp.length !== CELL_COUNT) {
+      showToast('error', 'Incomplete', 'Please enter all 6 digits.');
+      return;
+    }
+    try {
+      await dispatch(verifyOtp({ email, otp })).unwrap();
+      showToast('success', 'Login Successful', 'Welcome back!');
+      // No manual navigation — isLoggedIn flips to true and RootNavigator
+      // swaps AuthStack → MainDrawer automatically.
+    } catch (e) {
+      const attemptsLeft = Math.max(0, 3 - (otpAttempts + 1));
+      showToast(
+        'error',
+        'Invalid OTP',
+        attemptsLeft > 0
+          ? `Please try again. (${attemptsLeft} attempts remaining)`
+          : 'Attempts exhausted. Please request a new OTP.',
+      );
+      setDigits(Array(CELL_COUNT).fill(''));
+      inputs.current[0]?.focus();
+    }
+  };
+
+  const onResend = async () => {
+    if (timer > 0) return;
+    try {
+      await dispatch(sendOtp(email)).unwrap();
+      showToast('success', 'OTP Resent', `New OTP sent to ${email}`);
+      setTimer(30);
+    } catch (e) {
+      showToast('error', 'Failed', 'Could not resend OTP.');
+    }
+  };
+
+  return (
+    <ScreenContainer>
+      <View>
+        <View style={{ marginTop: spacing.xl }}>
+          <Text style={typography.h1}>Verify OTP</Text>
+          <Text style={[typography.bodyMuted, { marginTop: 6 }]}>
+            Enter the 6-digit code sent to{'\n'}
+            <Text style={styles.mobile}>{email}</Text>
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          {digits.map((d, i) => (
+            <TextInput
+              key={i}
+              ref={ref => (inputs.current[i] = ref)}
+              value={d}
+              onChangeText={t => handleChange(t, i)}
+              onKeyPress={e => handleKeyPress(e, i)}
+              keyboardType="number-pad"
+              maxLength={1}
+              style={[styles.cell, d && styles.cellFilled]}
+            />
+          ))}
+        </View>
+
+        <View style={styles.resendRow}>
+          <Text style={typography.bodyMuted}>Didn't receive the code? </Text>
+          <TouchableOpacity onPress={onResend} disabled={timer > 0}>
+            <Text style={[styles.resend, timer > 0 && { opacity: 0.5 }]}>
+              {timer > 0 ? `Resend in ${timer}s` : 'Resend OTP'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ marginTop: spacing.xl }}>
+          <Button title="Verify & Continue" onPress={onVerify} loading={loading} />
+        </View>
+      </View>
+    </ScreenContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  mobile: { fontWeight: '700', color: palette.text },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  cell: {
+    width: 48,
+    height: 56,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: palette.border,
+    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: '700',
+    color: palette.text,
+    backgroundColor: palette.surface,
+  },
+  cellFilled: { borderColor: palette.primary, backgroundColor: '#EEF2FF' },
+  resendRow: { flexDirection: 'row', justifyContent: 'center', marginTop: spacing.md },
+  resend: { color: palette.primary, fontWeight: '700' },
+});
