@@ -1,56 +1,45 @@
 import api from './client';
 import { ENV } from '../constants/env';
-import { mockApi } from './mock';
 
+// Per-property payment plan (admin-managed). Residents can also pay online
+// (Cashfree); admin can mark paid at the counter — both reflect here.
 export const paymentApi = {
-  getSchedule: async bookingId => {
-    if (ENV.USE_MOCK_API) return mockApi.getPaymentSchedule(bookingId);
-    const { data } = await api.get(`/payment/schedule/${bookingId}`);
+  myProperties: async () => {
+    const { data } = await api.get('/payment-plan/my');
     return data.data;
   },
 
-  getHistory: async (bookingId, { search, method, limit } = {}) => {
-    if (ENV.USE_MOCK_API) {
-      const all = await mockApi.getPaymentHistory(bookingId);
-      return all
-        .filter(p => !method || p.method === method)
-        .filter(p => !search || (p.txnId + p.remarks || '').toLowerCase().includes(search.toLowerCase()));
-    }
+  getSchedule: async propertyId => {
+    const { data } = await api.get(`/payment-plan/property/${propertyId}/schedule`);
+    return data.data;
+  },
+
+  getHistory: async (propertyId, { search, method } = {}) => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     if (method) params.set('method', method);
-    if (limit)  params.set('limit', String(limit));
     const qs = params.toString();
-    const { data } = await api.get(`/payment/history/${bookingId}${qs ? '?' + qs : ''}`);
+    const { data } = await api.get(`/payment-plan/property/${propertyId}/history${qs ? '?' + qs : ''}`);
     return data.data;
   },
 
-  getLedger: async bookingId => {
-    if (ENV.USE_MOCK_API) return mockApi.getLedger?.(bookingId) || null;
-    const { data } = await api.get(`/payment/ledger/${bookingId}`);
+  getLedger: async propertyId => {
+    const { data } = await api.get(`/payment-plan/property/${propertyId}/ledger`);
     return data.data;
   },
 
-  initiate: async payload => {
-    if (ENV.USE_MOCK_API) {
-      return {
-        orderId: 'MOCK-' + Date.now(),
-        paymentLink: 'https://example.invalid/checkout',
-        paymentSessionId: 'mock-session',
-        amount: payload.amount,
-        currency: 'INR',
-        environment: 'sandbox',
-      };
-    }
-    const { data } = await api.post('/payment/initiate', payload);
+  // Online pay — create a Cashfree order for one installment.
+  initiate: async installmentId => {
+    const { data } = await api.post(`/payment-plan/installment/${installmentId}/initiate`, {});
     return data.data;
   },
 
   verify: async orderId => {
-    if (ENV.USE_MOCK_API) {
-      return { orderId, status: 'paid', paymentId: 99, receiptCode: 'RCPT-MOCK' };
-    }
-    const { data } = await api.post('/payment/verify', { orderId });
+    const { data } = await api.post('/payment-plan/verify', { orderId });
     return data.data;
   },
+
+  // Authorized PDF link (token in query so the device browser can open it).
+  statementUrl: (propertyId, token) =>
+    `${ENV.API_BASE_URL}/payment-plan/property/${propertyId}/statement.pdf?token=${encodeURIComponent(token || '')}`,
 };

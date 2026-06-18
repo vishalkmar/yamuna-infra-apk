@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
 import StatusChip from '../../components/StatusChip';
 import SectionHeader from '../../components/SectionHeader';
 import { palette, radius, spacing, typography } from '../../theme';
 import { formatINR, formatDate, daysUntil } from '../../utils/format';
+import { loadMyProperties, loadProgress } from '../../store/slices/projectSlice';
+import { loadMyProperties as loadPayProperties, loadSchedule as loadPaySchedule } from '../../store/slices/paymentSlice';
 
 const QUICK_TILES = [
   { key: 'BookingDocket', label: 'Booking\nDocket', icon: '📘', color: '#EEF2FF' },
@@ -29,17 +31,29 @@ const SERVICE_TILES = [
 ];
 
 export default function HomeScreen({ navigation }) {
+  const dispatch = useDispatch();
   const user = useSelector(s => s.auth.user);
+  const { property, properties, selectedPropertyId, progressPct } = useSelector(s => s.project);
+  const paySchedule = useSelector(s => s.payment.schedule);
+  const paySelectedId = useSelector(s => s.payment.selectedPropertyId);
 
-  // Mock summary — production: from /booking + /payment endpoints
-  const summary = {
-    unit: 'T2-B-1204',
-    project: 'Vrindavan Heights',
-    nextDueAmount: 1250000,
-    nextDueDate: '2026-06-25',
-    progressPct: 62,
-  };
-  const due = daysUntil(summary.nextDueDate);
+  // Load the resident's property + its construction progress for the hero card.
+  useEffect(() => { dispatch(loadMyProperties()); dispatch(loadPayProperties()); }, [dispatch]);
+  useEffect(() => {
+    if (selectedPropertyId) dispatch(loadProgress(selectedPropertyId));
+  }, [dispatch, selectedPropertyId]);
+  useEffect(() => {
+    if (paySelectedId) dispatch(loadPaySchedule(paySelectedId));
+  }, [dispatch, paySelectedId]);
+
+  const unitLabel = property?.flatNo
+    ? [property.tower && `Tower ${property.tower}`, property.flatNo].filter(Boolean).join('-')
+    : (property?.label || (properties[0]?.flatNo) || '—');
+  const projectName = property?.projectName || properties[0]?.projectName || 'Your residence';
+  const hasProperty = properties.length > 0;
+
+  // Next due comes from the real payment plan.
+  const nextDue = paySchedule?.nextDue || null;
 
   return (
     <ScreenContainer>
@@ -56,37 +70,54 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <Card style={styles.heroCard}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View>
-            <Text style={styles.heroLabel}>YOUR UNIT</Text>
-            <Text style={styles.heroUnit}>{summary.unit}</Text>
-            <Text style={styles.heroProject}>{summary.project}</Text>
+      <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('ConstructionTracker')}>
+        <Card style={styles.heroCard}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View>
+              <Text style={styles.heroLabel}>YOUR UNIT</Text>
+              <Text style={styles.heroUnit}>{unitLabel}</Text>
+              <Text style={styles.heroProject}>{projectName}</Text>
+            </View>
+            <StatusChip
+              label={property?.workStatus === 'completed' ? 'COMPLETED' : 'ACTIVE'}
+              variant={property?.workStatus === 'completed' ? 'info' : 'success'}
+            />
           </View>
-          <StatusChip label="ACTIVE" variant="success" />
-        </View>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${summary.progressPct}%` }]} />
-        </View>
-        <Text style={styles.progressLabel}>
-          Construction progress: <Text style={{ fontWeight: '700' }}>{summary.progressPct}%</Text>
-        </Text>
-      </Card>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${hasProperty ? progressPct : 0}%` }]} />
+          </View>
+          <Text style={styles.progressLabel}>
+            {hasProperty
+              ? <>Construction progress: <Text style={{ fontWeight: '700' }}>{progressPct}%</Text></>
+              : 'No property linked yet'}
+          </Text>
+        </Card>
+      </TouchableOpacity>
 
       <Card style={styles.dueCard}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={typography.caption}>NEXT DUE</Text>
-            <Text style={styles.dueAmount}>{formatINR(summary.nextDueAmount)}</Text>
-            <Text style={typography.bodyMuted}>
-              {formatDate(summary.nextDueDate)} · {due >= 0 ? `${due} days left` : `${Math.abs(due)} days overdue`}
-            </Text>
+            {nextDue ? (
+              <>
+                <Text style={styles.dueAmount}>{formatINR(Number(nextDue.amount) + Number(nextDue.lateFee || 0))}</Text>
+                <Text style={typography.bodyMuted}>
+                  {nextDue.label} · {formatDate(nextDue.dueDate)}
+                  {nextDue.dueDate ? ` · ${daysUntil(nextDue.dueDate) >= 0 ? `${daysUntil(nextDue.dueDate)} days left` : `${Math.abs(daysUntil(nextDue.dueDate))} days overdue`}` : ''}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.dueAmount}>—</Text>
+                <Text style={typography.bodyMuted}>No dues pending</Text>
+              </>
+            )}
           </View>
           <TouchableOpacity
             style={styles.payBtn}
             onPress={() => navigation.navigate('PaymentDashboard')}
           >
-            <Text style={styles.payBtnText}>Pay Now</Text>
+            <Text style={styles.payBtnText}>{nextDue ? 'Pay Now' : 'View'}</Text>
           </TouchableOpacity>
         </View>
       </Card>

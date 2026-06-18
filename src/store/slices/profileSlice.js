@@ -52,6 +52,7 @@ const initialState = {
   personal: null,
   preferences: null,
   family: [],
+  properties: [],
   kyc: null,
   loading: false,
   saveBusy: false,
@@ -70,6 +71,7 @@ const profileSlice = createSlice({
         state.personal = action.payload.personal;
         state.preferences = action.payload.preferences;
         state.family = action.payload.family || [];
+        state.properties = action.payload.properties || [];
         state.kyc = action.payload.kyc;
       })
       .addCase(loadProfile.rejected, state => { state.loading = false; })

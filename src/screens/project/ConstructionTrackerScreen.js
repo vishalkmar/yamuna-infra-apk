@@ -12,34 +12,46 @@ import MilestoneTimeline from '../../components/MilestoneTimeline';
 import MilestoneDetailSheet from '../../components/MilestoneDetailSheet';
 import { palette, radius, spacing, typography } from '../../theme';
 import { formatDate } from '../../utils/format';
-import { loadProgress, loadUpdates } from '../../store/slices/projectSlice';
-
-const DEFAULT_PROJECT_ID = 1; // Vrindavan Heights — derived from user.booking → project in real flow
+import { loadProgress, loadUpdates, loadMyProperties, selectProperty } from '../../store/slices/projectSlice';
 
 export default function ConstructionTrackerScreen() {
   const dispatch = useDispatch();
   const {
-    project, progressPct, currentMilestone, milestones, counts,
-    updates, loading, updatesLoading, error,
+    project, properties, selectedPropertyId, progressPct, currentMilestone, milestones, counts,
+    updates, loading, propertiesLoading, updatesLoading, error,
   } = useSelector(s => s.project);
 
-  // Real backend will resolve projectId from the user's booking, but for now
-  // pin to project 1 (Vrindavan Heights). Mock returns the same id.
-  const projectId = project?.id || DEFAULT_PROJECT_ID;
+  const propertyId = selectedPropertyId;
   const [selectedMilestoneId, setSelectedMilestoneId] = useState(null);
 
+  // Resolve the resident's properties once.
+  useEffect(() => { dispatch(loadMyProperties()); }, [dispatch]);
+
   const reload = useCallback(() => {
-    dispatch(loadProgress(projectId));
-    dispatch(loadUpdates({ projectId, limit: 12 }));
-  }, [dispatch, projectId]);
+    if (!propertyId) return;
+    dispatch(loadProgress(propertyId));
+    dispatch(loadUpdates({ propertyId, limit: 12 }));
+  }, [dispatch, propertyId]);
 
   useEffect(() => { reload(); }, [reload]);
 
-  if (loading && milestones.length === 0) {
+  if ((loading || propertiesLoading) && milestones.length === 0 && !propertyId) {
     return (
       <ScreenContainer>
         <CardSkeleton />
         <CardSkeleton />
+      </ScreenContainer>
+    );
+  }
+
+  if (!propertyId && !propertiesLoading) {
+    return (
+      <ScreenContainer refreshing={propertiesLoading} onRefresh={() => dispatch(loadMyProperties())}>
+        <EmptyState
+          icon="🏠"
+          title="No property yet"
+          message="No property is linked to your account yet. Please contact the office."
+        />
       </ScreenContainer>
     );
   }
@@ -58,6 +70,24 @@ export default function ConstructionTrackerScreen() {
 
   return (
     <ScreenContainer refreshing={loading} onRefresh={reload}>
+      {/* Property switcher (when the resident owns more than one) */}
+      {properties.length > 1 ? (
+        <View style={styles.switcher}>
+          {properties.map(p => {
+            const active = p.id === selectedPropertyId;
+            return (
+              <Text
+                key={p.id}
+                onPress={() => dispatch(selectProperty(p.id))}
+                style={[styles.switchChip, active && styles.switchChipActive]}
+              >
+                {p.label || p.flatNo || `Unit ${p.id}`}
+              </Text>
+            );
+          })}
+        </View>
+      ) : null}
+
       {/* Hero */}
       <Card style={styles.hero}>
         <View style={styles.heroRow}>
@@ -119,7 +149,7 @@ export default function ConstructionTrackerScreen() {
 
       <MilestoneDetailSheet
         visible={!!selectedMilestoneId}
-        projectId={projectId}
+        propertyId={propertyId}
         milestoneId={selectedMilestoneId}
         onClose={() => setSelectedMilestoneId(null)}
       />
@@ -201,6 +231,15 @@ const styles = StyleSheet.create({
   pillDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
   pillLabel: { color: '#DBE3FF', fontSize: 11, fontWeight: '600', flex: 1 },
   pillValue: { color: '#fff', fontSize: 12, fontWeight: '800' },
+
+  switcher: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing.sm },
+  switchChip: {
+    fontSize: 12, fontWeight: '700', color: palette.textMuted,
+    backgroundColor: palette.surfaceAlt, borderRadius: radius.pill,
+    paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 6,
+    overflow: 'hidden',
+  },
+  switchChipActive: { backgroundColor: palette.primary, color: '#fff' },
 
   sectionTitle: { marginBottom: spacing.sm, marginTop: spacing.md },
 

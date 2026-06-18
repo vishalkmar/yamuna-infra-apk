@@ -1,26 +1,30 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { paymentApi } from '../../api/paymentApi';
 
-export const loadSchedule = createAsyncThunk('payment/loadSchedule', async bookingId => {
-  return await paymentApi.getSchedule(bookingId);
+export const loadMyProperties = createAsyncThunk('payment/loadMyProperties', async () => {
+  return await paymentApi.myProperties();
+});
+
+export const loadSchedule = createAsyncThunk('payment/loadSchedule', async propertyId => {
+  return await paymentApi.getSchedule(propertyId);
 });
 
 export const loadHistory = createAsyncThunk(
   'payment/loadHistory',
-  async ({ bookingId, search, method, limit } = {}) => {
-    return await paymentApi.getHistory(bookingId, { search, method, limit });
+  async ({ propertyId, search, method } = {}) => {
+    return await paymentApi.getHistory(propertyId, { search, method });
   },
 );
 
-export const loadLedger = createAsyncThunk('payment/loadLedger', async bookingId => {
-  return await paymentApi.getLedger(bookingId);
+export const loadLedger = createAsyncThunk('payment/loadLedger', async propertyId => {
+  return await paymentApi.getLedger(propertyId);
 });
 
 export const initiatePayment = createAsyncThunk(
   'payment/initiate',
-  async (payload, { rejectWithValue }) => {
+  async ({ installmentId }, { rejectWithValue }) => {
     try {
-      return await paymentApi.initiate(payload);
+      return await paymentApi.initiate(installmentId);
     } catch (e) {
       return rejectWithValue(e?.response?.data?.message || 'Payment initiation failed');
     }
@@ -39,6 +43,9 @@ export const verifyPayment = createAsyncThunk(
 );
 
 const initialState = {
+  properties: [],
+  selectedPropertyId: null,
+  propertiesLoading: false,
   schedule: null,
   history: [],
   ledger: null,
@@ -65,9 +72,22 @@ const paymentSlice = createSlice({
     resetPay: state => {
       state.pay = initialState.pay;
     },
+    selectPaymentProperty: (state, action) => {
+      state.selectedPropertyId = action.payload;
+    },
   },
   extraReducers: builder => {
     builder
+      .addCase(loadMyProperties.pending, state => { state.propertiesLoading = true; })
+      .addCase(loadMyProperties.fulfilled, (state, action) => {
+        state.propertiesLoading = false;
+        state.properties = action.payload || [];
+        if (!state.selectedPropertyId && state.properties.length > 0) {
+          state.selectedPropertyId = state.properties[0].id;
+        }
+      })
+      .addCase(loadMyProperties.rejected, state => { state.propertiesLoading = false; })
+
       .addCase(loadSchedule.pending, state => { state.loading = true; })
       .addCase(loadSchedule.fulfilled, (state, action) => {
         state.loading = false;
@@ -121,5 +141,5 @@ const paymentSlice = createSlice({
   },
 });
 
-export const { setHistoryFilters, resetPay } = paymentSlice.actions;
+export const { setHistoryFilters, resetPay, selectPaymentProperty } = paymentSlice.actions;
 export default paymentSlice.reducer;

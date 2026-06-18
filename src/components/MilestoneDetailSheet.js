@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, FlatList, Image, ScrollView, Switch, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, ScrollView, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { palette, radius, spacing, typography } from '../theme';
 import { formatDate } from '../utils/format';
 import StatusChip from './StatusChip';
-import {
-  loadMilestone, setSubscription, clearSelectedMilestone,
-} from '../store/slices/projectSlice';
+import { loadMilestone, clearSelectedMilestone } from '../store/slices/projectSlice';
 
 const STATE_CHIP = {
   completed:   { variant: 'success', label: 'COMPLETED' },
@@ -14,31 +12,25 @@ const STATE_CHIP = {
   pending:     { variant: 'neutral', label: 'PENDING' },
 };
 
-export default function MilestoneDetailSheet({ visible, projectId, milestoneId, onClose }) {
+// Raw admin status → human label (richer than the 3 visual states).
+const RAW_LABEL = {
+  planned: 'PLANNED', in_progress: 'IN PROGRESS', completed: 'COMPLETED',
+  postponed: 'POSTPONED', on_hold: 'ON HOLD',
+};
+
+export default function MilestoneDetailSheet({ visible, propertyId, milestoneId, onClose }) {
   const dispatch = useDispatch();
-  const { selectedMilestone, milestoneLoading, subscriptionBusy } = useSelector(s => s.project);
+  const { selectedMilestone, milestoneLoading } = useSelector(s => s.project);
 
   useEffect(() => {
-    if (visible && projectId && milestoneId) {
-      dispatch(loadMilestone({ projectId, milestoneId }));
+    if (visible && propertyId && milestoneId) {
+      dispatch(loadMilestone({ propertyId, milestoneId }));
     }
-  }, [visible, projectId, milestoneId, dispatch]);
+  }, [visible, propertyId, milestoneId, dispatch]);
 
   const close = () => {
     dispatch(clearSelectedMilestone());
     onClose();
-  };
-
-  const toggleNotifications = value => {
-    if (!selectedMilestone) return;
-    dispatch(setSubscription({
-      projectId,
-      milestoneId: selectedMilestone.id,
-      enabled: value,
-      channels: selectedMilestone.notificationChannels?.length
-        ? selectedMilestone.notificationChannels
-        : ['push'],
-    }));
   };
 
   return (
@@ -50,12 +42,7 @@ export default function MilestoneDetailSheet({ visible, projectId, milestoneId, 
               <ActivityIndicator size="large" color={palette.primary} />
             </View>
           ) : (
-            <Inner
-              milestone={selectedMilestone}
-              onClose={close}
-              onToggle={toggleNotifications}
-              toggleBusy={subscriptionBusy}
-            />
+            <Inner milestone={selectedMilestone} onClose={close} />
           )}
         </View>
       </View>
@@ -63,20 +50,25 @@ export default function MilestoneDetailSheet({ visible, projectId, milestoneId, 
   );
 }
 
-function Inner({ milestone, onClose, onToggle, toggleBusy }) {
+function Inner({ milestone, onClose }) {
   const chip = STATE_CHIP[milestone.status] || STATE_CHIP.pending;
+  const rawLabel = RAW_LABEL[milestone.rawStatus] || chip.label;
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
-          <StatusChip label={chip.label} variant={chip.variant} />
+          <StatusChip label={rawLabel} variant={chip.variant} />
           <Text style={[typography.h2, { marginTop: spacing.sm }]}>{milestone.name}</Text>
           {milestone.completedAt ? (
             <Text style={typography.caption}>Completed {formatDate(milestone.completedAt)}</Text>
           ) : milestone.expectedDate ? (
             <Text style={typography.caption}>Expected by {formatDate(milestone.expectedDate)}</Text>
           ) : null}
+          <Text style={typography.caption}>
+            {milestone.percent != null ? `${milestone.percent}% done` : ''}
+            {milestone.floorsReached ? `  ·  🏢 ${milestone.floorsReached}` : ''}
+          </Text>
         </View>
         <TouchableOpacity onPress={onClose} hitSlop={10}>
           <Text style={styles.close}>×</Text>
@@ -91,50 +83,41 @@ function Inner({ milestone, onClose, onToggle, toggleBusy }) {
         <Text style={[typography.body, { marginTop: spacing.md }]}>{milestone.description}</Text>
       ) : null}
 
-      {/* Notifications toggle */}
-      <View style={styles.notifRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={typography.label}>🔔  Push notifications</Text>
-          <Text style={typography.caption}>
-            Get notified when this milestone is updated
-          </Text>
-        </View>
-        <Switch
-          value={!!milestone.notificationsEnabled}
-          onValueChange={onToggle}
-          disabled={toggleBusy}
-          trackColor={{ false: palette.surfaceAlt, true: palette.primary }}
-        />
-      </View>
-
-      {/* Photos */}
-      {milestone.photos?.length > 0 ? (
+      {/* Updates — each is a small dated entry that can hold multiple photos */}
+      {milestone.entries?.length > 0 ? (
         <View style={styles.photosWrap}>
           <Text style={[typography.h3, { marginBottom: spacing.sm }]}>
-            Photos · {milestone.photos.length}
+            Updates · {milestone.entries.length}
           </Text>
-          <FlatList
-            data={milestone.photos}
-            keyExtractor={p => String(p.id)}
-            numColumns={2}
-            columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: spacing.sm }}
-            scrollEnabled={false}
-            renderItem={({ item }) => (
-              <View style={styles.photoTile}>
-                <Image source={{ uri: item.url }} style={styles.photoImg} resizeMode="cover" />
-                {item.caption ? (
-                  <Text style={styles.photoCaption} numberOfLines={2}>{item.caption}</Text>
-                ) : null}
-                {item.takenAt ? (
-                  <Text style={typography.caption}>{formatDate(item.takenAt)}</Text>
+          {milestone.entries.map(entry => (
+            <View key={entry.id} style={styles.entryCard}>
+              <View style={styles.entryHead}>
+                <Text style={styles.entryTitle}>{entry.title || 'Update'}</Text>
+                {entry.entryDate ? (
+                  <Text style={typography.caption}>{formatDate(entry.entryDate)}</Text>
                 ) : null}
               </View>
-            )}
-          />
+              {entry.note ? (
+                <Text style={[typography.body, { marginTop: 4 }]}>{entry.note}</Text>
+              ) : null}
+              {entry.images?.length > 0 ? (
+                <View style={styles.entryImages}>
+                  {entry.images.map((img, idx) => (
+                    <View key={idx} style={styles.entryImageTile}>
+                      <Image source={{ uri: img.url }} style={styles.entryImg} resizeMode="cover" />
+                      {img.caption ? (
+                        <Text style={styles.photoCaption} numberOfLines={2}>{img.caption}</Text>
+                      ) : null}
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          ))}
         </View>
       ) : (
         <Text style={[typography.bodyMuted, { marginTop: spacing.md, textAlign: 'center' }]}>
-          📷  Photos will appear here when uploaded.
+          📷  Updates with photos will appear here as work progresses.
         </Text>
       )}
     </ScrollView>
@@ -155,23 +138,19 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.md },
   close: { fontSize: 26, color: palette.textMuted, paddingHorizontal: spacing.sm },
   cover: { width: '100%', height: 180, borderRadius: radius.md, marginTop: spacing.sm },
-  notifRow: {
-    flexDirection: 'row', alignItems: 'center',
+  photosWrap: { marginTop: spacing.lg },
+
+  entryCard: {
     backgroundColor: palette.surface,
     borderWidth: 1, borderColor: palette.divider,
     borderRadius: radius.md,
     padding: spacing.md,
-    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
-  photosWrap: { marginTop: spacing.lg },
-  photoTile: {
-    width: '48.5%',
-    backgroundColor: palette.surface,
-    borderRadius: radius.md,
-    borderWidth: 1, borderColor: palette.divider,
-    overflow: 'hidden',
-    padding: spacing.sm,
-  },
-  photoImg: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.sm, backgroundColor: palette.surfaceAlt },
-  photoCaption: { fontSize: 12, fontWeight: '600', color: palette.text, marginTop: 6 },
+  entryHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  entryTitle: { fontSize: 15, fontWeight: '700', color: palette.text, flex: 1, marginRight: spacing.sm },
+  entryImages: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.sm, marginHorizontal: -3 },
+  entryImageTile: { width: '50%', paddingHorizontal: 3, marginBottom: spacing.sm },
+  entryImg: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.sm, backgroundColor: palette.surfaceAlt },
+  photoCaption: { fontSize: 12, fontWeight: '600', color: palette.text, marginTop: 4 },
 });

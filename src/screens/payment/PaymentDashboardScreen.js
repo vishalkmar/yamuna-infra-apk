@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Linking } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -17,10 +17,11 @@ import { palette, radius, spacing, typography } from '../../theme';
 import { formatINR, formatDate, daysUntil } from '../../utils/format';
 import { paymentSchema } from '../../utils/validation';
 import {
-  loadSchedule, loadHistory, loadLedger,
+  loadMyProperties, loadSchedule, loadHistory, loadLedger,
   initiatePayment, verifyPayment,
-  setHistoryFilters, resetPay,
+  setHistoryFilters, resetPay, selectPaymentProperty,
 } from '../../store/slices/paymentSlice';
+import { paymentApi } from '../../api/paymentApi';
 import { showToast } from '../../utils/toastConfig';
 
 const TABS = [
@@ -44,25 +45,33 @@ const PAYMENT_METHODS = [
 
 export default function PaymentDashboardScreen() {
   const dispatch = useDispatch();
-  const { schedule, history, ledger, loading, historyLoading, ledgerLoading,
-          historyFilters, pay } = useSelector(s => s.payment);
-  const user = useSelector(s => s.auth.user);
-  const bookingId = user?.bookingId || user?.primary_booking_id || 'BK-2024-00421';
+  const { properties, selectedPropertyId, propertiesLoading, schedule, history, ledger,
+          loading, historyLoading, ledgerLoading, historyFilters, pay } = useSelector(s => s.payment);
+  const token = useSelector(s => s.auth.token);
+  const propertyId = selectedPropertyId;
 
   const [tab, setTab] = useState('upcoming');
   const [payTarget, setPayTarget] = useState(null);     // installment selected for paying
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
-  const reloadSchedule = useCallback(() => dispatch(loadSchedule(bookingId)), [dispatch, bookingId]);
+  useEffect(() => { dispatch(loadMyProperties()); }, [dispatch]);
+
+  const reloadSchedule = useCallback(() => { if (propertyId) dispatch(loadSchedule(propertyId)); }, [dispatch, propertyId]);
   const reloadHistory = useCallback(
-    () => dispatch(loadHistory({ bookingId, ...historyFilters })),
-    [dispatch, bookingId, historyFilters],
+    () => { if (propertyId) dispatch(loadHistory({ propertyId, ...historyFilters })); },
+    [dispatch, propertyId, historyFilters],
   );
-  const reloadLedger = useCallback(() => dispatch(loadLedger(bookingId)), [dispatch, bookingId]);
+  const reloadLedger = useCallback(() => { if (propertyId) dispatch(loadLedger(propertyId)); }, [dispatch, propertyId]);
 
   useEffect(() => { reloadSchedule(); }, [reloadSchedule]);
   useEffect(() => { if (tab === 'history') reloadHistory(); }, [tab, reloadHistory]);
-  useEffect(() => { if (tab === 'ledger' && !ledger) reloadLedger(); }, [tab, ledger, reloadLedger]);
+  useEffect(() => { if (tab === 'ledger') reloadLedger(); }, [tab, reloadLedger]);
+
+  const downloadStatement = () => {
+    if (!propertyId) return;
+    Linking.openURL(paymentApi.statementUrl(propertyId, token)).catch(() =>
+      showToast('error', 'Could not open', 'Unable to open the statement.'));
+  };
 
   const nextDue = schedule?.nextDue;
 
@@ -77,8 +86,31 @@ export default function PaymentDashboardScreen() {
   const openCheckout = () => setCheckoutOpen(true);
   const closeCheckout = () => setCheckoutOpen(false);
 
+  if (!propertyId && !propertiesLoading) {
+    return (
+      <ScreenContainer refreshing={propertiesLoading} onRefresh={() => dispatch(loadMyProperties())}>
+        <EmptyState icon="🧾" title="No property yet" message="No property is linked to your account yet. Please contact the office." />
+      </ScreenContainer>
+    );
+  }
+
   return (
     <ScreenContainer refreshing={loading} onRefresh={reloadSchedule}>
+      {/* Property switcher (when the resident owns more than one) */}
+      {properties.length > 1 ? (
+        <View style={styles.switcher}>
+          {properties.map(p => (
+            <Text
+              key={p.id}
+              onPress={() => dispatch(selectPaymentProperty(p.id))}
+              style={[styles.switchChip, p.id === selectedPropertyId && styles.switchChipActive]}
+            >
+              {p.label || p.flatNo || `Unit ${p.id}`}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+
       {/* Sticky header */}
       {loading && !schedule ? (
         <CardSkeleton />
@@ -121,14 +153,13 @@ export default function PaymentDashboardScreen() {
       )}
 
       {tab === 'ledger' && (
-        <LedgerTab ledger={ledger} loading={ledgerLoading} />
+        <LedgerTab ledger={ledger} loading={ledgerLoading} onDownload={downloadStatement} />
       )}
 
       {/* Pay-now sheet */}
       <PayNowSheet
         visible={!!payTarget}
         installment={payTarget}
-        bookingId={bookingId}
         pay={pay}
         onClose={closePaySheet}
         onOpenCheckout={openCheckout}
@@ -147,7 +178,7 @@ export default function PaymentDashboardScreen() {
               showToast(
                 'success',
                 'Payment received',
-                `Receipt #${result.receiptCode} sent to email & WhatsApp.`,
+                'A confirmation has been emailed to you.',
               );
               closePaySheet();
               reloadSchedule();
@@ -360,7 +391,7 @@ function PaymentRow({ item }) {
 //                            Tab: Ledger
 // =========================================================================
 
-function LedgerTab({ ledger, loading }) {
+function LedgerTab({ ledger, loading, onDownload }) {
   if (loading || !ledger) return <CardSkeleton />;
   const s = ledger.summary;
   return (
@@ -381,11 +412,23 @@ function LedgerTab({ ledger, loading }) {
             <Text style={[styles.ledgerSub, { color: palette.error }]}>{formatINR(s.outstanding)}</Text>
           </View>
         </View>
+        {Number(s.lateCharges) > 0 ? (
+          <View style={[styles.rowBetween, { marginTop: spacing.sm }]}>
+            <View>
+              <Text style={typography.caption}>LATE CHARGES</Text>
+              <Text style={[styles.ledgerSub, { color: palette.error }]}>{formatINR(s.lateCharges)}</Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={typography.caption}>TOTAL PAYABLE</Text>
+              <Text style={styles.ledgerSub}>{formatINR(s.totalPayable)}</Text>
+            </View>
+          </View>
+        ) : null}
         <Button
           title="Download Statement (PDF)"
           variant="outline"
           style={{ marginTop: spacing.md }}
-          onPress={() => showToast('success', 'Downloaded', 'Statement saved to your device.')}
+          onPress={onDownload}
         />
       </Card>
 
@@ -406,7 +449,7 @@ function LedgerTab({ ledger, loading }) {
 //                            Pay Now sheet
 // =========================================================================
 
-function PayNowSheet({ visible, installment, bookingId, pay, onClose, onOpenCheckout }) {
+function PayNowSheet({ visible, installment, pay, onClose, onOpenCheckout }) {
   const dispatch = useDispatch();
   const totalDue = installment
     ? Number(installment.amount) + Number(installment.lateFee || 0)
@@ -439,17 +482,10 @@ function PayNowSheet({ visible, installment, bookingId, pay, onClose, onOpenChec
   const mode = watch('paymentMode');
   const consent = watch('consent');
 
-  const submit = async data => {
+  const submit = async () => {
     try {
-      await dispatch(
-        initiatePayment({
-          bookingId,
-          installmentId: installment.id,
-          amount: Number(data.amount),
-          mode: data.paymentMode,
-          remarks: data.remarks,
-        }),
-      ).unwrap();
+      // Server uses the installment's own amount — only the id is needed.
+      await dispatch(initiatePayment({ installmentId: installment.id })).unwrap();
       onOpenCheckout();
     } catch (e) {
       showToast('error', 'Cannot start payment', String(e));

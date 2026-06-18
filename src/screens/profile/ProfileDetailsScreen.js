@@ -1,23 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
-import Button from '../../components/Button';
 import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
-import PersonalDetailsSheet from '../../components/PersonalDetailsSheet';
-import PreferencesSheet from '../../components/PreferencesSheet';
-import FamilyMemberSheet from '../../components/FamilyMemberSheet';
-import KycSheet from '../../components/KycSheet';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, spacing, typography } from '../../theme';
 import { formatDate } from '../../utils/format';
-import {
-  KYC_STATUS, RELATION_LABEL, LANGUAGE_LABEL, DIETARY_LABEL, profileCompletion,
-} from '../../utils/profile';
-import { loadProfile, removeFamily } from '../../store/slices/profileSlice';
+import { KYC_STATUS, RELATION_LABEL, LANGUAGE_LABEL, DIETARY_LABEL } from '../../utils/profile';
+import { loadProfile } from '../../store/slices/profileSlice';
 
 const GENDER_LABEL = { male: 'Male', female: 'Female', other: 'Other' };
 
@@ -30,24 +23,20 @@ function Field({ label, value }) {
   );
 }
 
-function SectionHead({ title, action, onPress }) {
+function SectionHead({ title }) {
   return (
     <View style={styles.sectionHead}>
       <Text style={typography.h3}>{title}</Text>
-      {action ? <TouchableOpacity onPress={onPress}><Text style={styles.action}>{action}</Text></TouchableOpacity> : null}
     </View>
   );
 }
 
+// Resident profile is READ-ONLY in the app. All data (personal details,
+// address, properties) is created and maintained by the admin office. The
+// resident can view but not edit or delete anything here.
 export default function ProfileDetailsScreen() {
   const dispatch = useDispatch();
-  const { personal, preferences, family, kyc, loading } = useSelector(s => s.profile);
-
-  const [personalOpen, setPersonalOpen] = useState(false);
-  const [prefsOpen, setPrefsOpen] = useState(false);
-  const [familyOpen, setFamilyOpen] = useState(false);
-  const [editMember, setEditMember] = useState(null);
-  const [kycOpen, setKycOpen] = useState(false);
+  const { personal, preferences, family, properties, kyc, loading } = useSelector(s => s.profile);
 
   const reload = useCallback(() => { dispatch(loadProfile()); }, [dispatch]);
   useEffect(() => { reload(); }, [reload]);
@@ -56,39 +45,63 @@ export default function ProfileDetailsScreen() {
     return <ScreenContainer><CardSkeleton /><CardSkeleton /></ScreenContainer>;
   }
 
-  const completion = profileCompletion(personal, kyc, family);
   const ks = KYC_STATUS[kyc?.status] || KYC_STATUS.not_started;
   const ch = preferences?.channels || {};
   const channelsOn = Object.entries(ch).filter(([, v]) => v).map(([k]) => k);
 
-  const openAddMember = () => { setEditMember(null); setFamilyOpen(true); };
-  const openEditMember = m => { setEditMember(m); setFamilyOpen(true); };
+  const fullAddress = [personal?.addressLine, personal?.city, personal?.state, personal?.pincode].filter(Boolean).join(', ');
 
   return (
     <ScreenContainer refreshing={loading} onRefresh={reload}>
-      {/* Completion */}
+      {/* Header */}
       <Card style={styles.hero}>
-        <View style={styles.avatar}><Text style={{ fontSize: 30 }}>👤</Text></View>
+        <View style={styles.avatar}>
+          {personal?.photo ? (
+            <Image source={{ uri: personal.photo }} style={styles.avatarImg} />
+          ) : (
+            <Text style={{ fontSize: 30 }}>👤</Text>
+          )}
+        </View>
         <Text style={styles.heroName}>{personal?.name || 'Resident'}</Text>
-        <Text style={styles.heroSub}>+91 {personal?.mobile || '----------'}</Text>
-        <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${completion}%` }]} /></View>
-        <Text style={styles.progressText}>Profile {completion}% complete</Text>
+        {personal?.mobile ? <Text style={styles.heroSub}>+91 {personal.mobile}</Text> : null}
+        {personal?.email ? <Text style={styles.heroSub}>{personal.email}</Text> : null}
       </Card>
 
-      {/* Personal details */}
-      <SectionHead title="Personal details" action="Edit" onPress={() => setPersonalOpen(true)} />
+      {/* Personal details (read-only) */}
+      <SectionHead title="Personal details" />
       <Card style={styles.card}>
         <Field label="Email" value={personal?.email} />
+        <Field label="Phone" value={personal?.mobile ? `+91 ${personal.mobile}` : ''} />
         <Field label="Date of birth" value={personal?.dob ? formatDate(personal.dob) : ''} />
         <Field label="Gender" value={GENDER_LABEL[personal?.gender]} />
-        <Field label="Alternate phone" value={personal?.altPhone ? `+91 ${personal.altPhone}` : ''} />
         <Field label="Occupation" value={personal?.occupation} />
-        <Field label="Address" value={[personal?.addressLine, personal?.city, personal?.state, personal?.pincode].filter(Boolean).join(', ')} />
+        <Field label="Address" value={fullAddress} />
         <Field label="Residence" value={[personal?.tower, personal?.unit].filter(Boolean).join(' · ')} />
       </Card>
 
-      {/* Preferences */}
-      <SectionHead title="Preferences" action="Edit" onPress={() => setPrefsOpen(true)} />
+      {/* Properties (assigned by the office) */}
+      <SectionHead title="My properties" />
+      {(!properties || properties.length === 0) ? (
+        <EmptyState icon="🏠" message="No properties on your account yet." />
+      ) : properties.map(p => (
+        <Card key={p.id} style={styles.card}>
+          <View style={styles.rowBetween}>
+            <Text style={styles.name}>{p.label || p.propertyType || 'Property'}{p.flatNo ? ` · ${p.flatNo}` : ''}</Text>
+            {p.propertyType ? <StatusChip label={p.propertyType} variant="info" /> : null}
+          </View>
+          {p.projectName ? <Text style={typography.caption}>{p.projectName}</Text> : null}
+          <View style={{ marginTop: spacing.sm }}>
+            {(p.tower || p.floor) ? (
+              <Field label="Tower / Floor" value={[p.tower && `Tower ${p.tower}`, p.floor && `Floor ${p.floor}`].filter(Boolean).join(' · ')} />
+            ) : null}
+            {p.areaSqft ? <Field label="Area" value={`${p.areaSqft} sq.ft`} /> : null}
+            <Field label="Address" value={[p.addressLine, p.city, p.state, p.pincode].filter(Boolean).join(', ')} />
+          </View>
+        </Card>
+      ))}
+
+      {/* Preferences (read-only) */}
+      <SectionHead title="Preferences" />
       <Card style={styles.card}>
         <Field label="App language" value={LANGUAGE_LABEL[preferences?.language]} />
         <Field label="Dietary" value={DIETARY_LABEL[preferences?.dietary]} />
@@ -96,26 +109,20 @@ export default function ProfileDetailsScreen() {
         <Field label="Festival alerts" value={preferences?.festivalAlerts ? 'On' : 'Off'} />
       </Card>
 
-      {/* Family */}
-      <SectionHead title="Family members" action="＋ Add" onPress={openAddMember} />
+      {/* Family (read-only) */}
+      <SectionHead title="Family members" />
       {(!family || family.length === 0) ? (
-        <EmptyState icon="👨‍👩‍👧" message="No family members added yet." />
+        <EmptyState icon="👨‍👩‍👧" message="No family members on record." />
       ) : family.map(m => (
         <Card key={m.id} style={styles.card}>
-          <View style={styles.rowBetween}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.name}>{m.name}</Text>
-              <Text style={typography.caption}>
-                {RELATION_LABEL(m.relation)}{m.age != null ? ` · ${m.age} yrs` : ''}{m.phone ? ` · +91 ${m.phone}` : ''}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => openEditMember(m)} hitSlop={6}><Text style={styles.editSmall}>Edit</Text></TouchableOpacity>
-            <TouchableOpacity onPress={() => dispatch(removeFamily(m.id))} hitSlop={6}><Text style={styles.remove}>Remove</Text></TouchableOpacity>
-          </View>
+          <Text style={styles.name}>{m.name}</Text>
+          <Text style={typography.caption}>
+            {RELATION_LABEL(m.relation)}{m.age != null ? ` · ${m.age} yrs` : ''}{m.phone ? ` · +91 ${m.phone}` : ''}
+          </Text>
         </Card>
       ))}
 
-      {/* KYC */}
+      {/* KYC (read-only) */}
       <SectionHead title="KYC verification" />
       <Card style={styles.card}>
         <View style={styles.rowBetween}>
@@ -125,35 +132,23 @@ export default function ProfileDetailsScreen() {
         {kyc?.idNumberMasked ? (
           <Text style={typography.caption}>{String(kyc.idType || '').toUpperCase()} · {kyc.idNumberMasked}</Text>
         ) : null}
-        {kyc?.submittedAt ? <Text style={typography.caption}>Submitted {formatDate(kyc.submittedAt)}</Text> : null}
-        {(kyc?.status === 'not_started' || kyc?.status === 'rejected') ? (
-          <Button title="Complete KYC" onPress={() => setKycOpen(true)} style={{ marginTop: spacing.sm }} />
-        ) : kyc?.status === 'pending' ? (
-          <Text style={[typography.caption, { marginTop: 6 }]}>We are reviewing your documents.</Text>
-        ) : (
-          <Text style={[typography.caption, { marginTop: 6, color: palette.success || '#15803D' }]}>✓ Your identity is verified.</Text>
-        )}
       </Card>
 
-      <PersonalDetailsSheet visible={personalOpen} onClose={() => setPersonalOpen(false)} onSaved={reload} />
-      <PreferencesSheet visible={prefsOpen} onClose={() => setPrefsOpen(false)} onSaved={reload} />
-      <FamilyMemberSheet visible={familyOpen} member={editMember} onClose={() => setFamilyOpen(false)} onSaved={reload} />
-      <KycSheet visible={kycOpen} onClose={() => setKycOpen(false)} onSaved={reload} />
+      <Text style={styles.footNote}>
+        Your profile is managed by the Yamuna Infra office. To update any detail, please contact us.
+      </Text>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
   hero: { alignItems: 'center', marginBottom: spacing.md },
-  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: palette.surfaceAlt, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: palette.surfaceAlt, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm, overflow: 'hidden' },
+  avatarImg: { width: 72, height: 72, borderRadius: 36 },
   heroName: { ...typography.h3 },
-  heroSub: { ...typography.caption, marginBottom: spacing.sm },
-  progressTrack: { width: '100%', height: 6, borderRadius: radius.pill, backgroundColor: palette.surfaceAlt, overflow: 'hidden', marginTop: 4 },
-  progressFill: { height: '100%', backgroundColor: palette.primary },
-  progressText: { ...typography.caption, marginTop: 6, color: palette.primary, fontWeight: '700' },
+  heroSub: { ...typography.caption, marginBottom: 2 },
 
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md, marginBottom: spacing.sm },
-  action: { color: palette.primary, fontWeight: '700', fontSize: 13 },
   card: { marginBottom: spacing.sm },
 
   field: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 5 },
@@ -162,6 +157,6 @@ const styles = StyleSheet.create({
 
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   name: { fontSize: 15, fontWeight: '700', color: palette.text },
-  editSmall: { color: palette.primary, fontWeight: '700', fontSize: 12, marginLeft: spacing.md },
-  remove: { color: palette.error, fontWeight: '700', fontSize: 12, marginLeft: spacing.md },
+
+  footNote: { ...typography.caption, marginTop: spacing.md, marginBottom: spacing.xl, textAlign: 'center', color: palette.textMuted },
 });
