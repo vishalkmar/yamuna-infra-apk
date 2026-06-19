@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
@@ -12,7 +12,7 @@ import { showToast } from '../../utils/toastConfig';
 
 // Booking dockets are uploaded by the office (admin) per resident and shown
 // here as downloadable PDFs.
-export default function BookingDocketScreen() {
+export default function BookingDocketScreen({ navigation }) {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +29,10 @@ export default function BookingDocketScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  const open = url => url && Linking.openURL(url).catch(() => showToast('error', 'Cannot open', 'Invalid file link.'));
+  const open = (url, title) => {
+    if (!url) return;
+    navigation?.navigate?.('PdfViewer', { url, title });
+  };
 
   if (loading && docs.length === 0) {
     return <ScreenContainer><CardSkeleton /><CardSkeleton /></ScreenContainer>;
@@ -44,7 +47,7 @@ export default function BookingDocketScreen() {
       {docs.length === 0 ? (
         <EmptyState icon="📂" title="No documents yet" message="Your booking docket will appear here once the office uploads it." />
       ) : docs.map(d => (
-        <TouchableOpacity key={d.id} activeOpacity={0.85} onPress={() => open(d.url)}>
+        <TouchableOpacity key={d.id} activeOpacity={0.85} onPress={() => open(d.url, d.title)}>
           <Card style={styles.row}>
             <View style={styles.icon}><Text style={{ fontSize: 22 }}>📄</Text></View>
             <View style={{ flex: 1, marginLeft: spacing.md }}>

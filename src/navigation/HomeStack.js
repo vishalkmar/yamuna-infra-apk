@@ -4,6 +4,7 @@ import HomeScreen from '../screens/home/HomeScreen';
 import BookingDocketScreen from '../screens/booking/BookingDocketScreen';
 import PaymentDashboardScreen from '../screens/payment/PaymentDashboardScreen';
 import DocumentRepositoryScreen from '../screens/documents/DocumentRepositoryScreen';
+import PdfViewerScreen from '../screens/documents/PdfViewerScreen';
 import ConstructionTrackerScreen from '../screens/project/ConstructionTrackerScreen';
 import SiteVisitScreen from '../screens/sitevisit/SiteVisitScreen';
 import SupportScreen from '../screens/support/SupportScreen';
@@ -32,6 +33,7 @@ export default function HomeStack() {
       <Stack.Screen name="BookingDocket" component={BookingDocketScreen} options={{ title: 'Booking Docket' }} />
       <Stack.Screen name="PaymentDashboard" component={PaymentDashboardScreen} options={{ title: 'Payments' }} />
       <Stack.Screen name="DocumentRepository" component={DocumentRepositoryScreen} options={{ title: 'Documents' }} />
+      <Stack.Screen name="PdfViewer" component={PdfViewerScreen} options={{ title: 'Document' }} />
       <Stack.Screen name="ConstructionTracker" component={ConstructionTrackerScreen} options={{ title: 'Construction Progress' }} />
       <Stack.Screen name="SiteVisit" component={SiteVisitScreen} options={{ title: 'Site Overview' }} />
       <Stack.Screen name="Support" component={SupportScreen} options={{ title: 'Support' }} />

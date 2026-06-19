@@ -8,6 +8,7 @@ import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
 import { palette, radius, spacing, typography } from '../../theme';
 import { showToast } from '../../utils/toastConfig';
+import { playSosAlarm } from '../../services/notifications';
 import { loadContacts, activateSos } from '../../store/slices/sosSlice';
 
 const HOLD_MS = 3000;
@@ -22,6 +23,7 @@ export default function SOSScreen() {
   useEffect(() => { dispatch(loadContacts()); }, [dispatch]);
 
   const fire = useCallback(async () => {
+    playSosAlarm(); // custom siren immediately on activation
     try {
       await dispatch(activateSos({})).unwrap();
       showToast('error', '🆘 SOS SENT', 'Reception alerted. Help is on the way!');

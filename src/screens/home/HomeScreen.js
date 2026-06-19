@@ -14,7 +14,6 @@ const QUICK_TILES = [
   { key: 'BookingDocket', label: 'Booking\nDocket', icon: '📘', color: '#EEF2FF' },
   { key: 'PaymentDashboard', label: 'Payments', icon: '💳', color: '#F0FDF4' },
   { key: 'ConstructionTracker', label: 'Progress', icon: '🏗️', color: '#FEF3C7' },
-  { key: 'DocumentRepository', label: 'Documents', icon: '📄', color: '#DBEAFE' },
   { key: 'SiteVisit', label: 'Site\nOverview', icon: '🗺️', color: '#FFE4E6' },
   { key: 'Support', label: 'Support', icon: '🎧', color: '#F3E8FF' },
 ];

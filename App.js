@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -15,12 +15,17 @@ import FloatingSOSButton from './src/components/FloatingSOSButton';
 import FloatingChatButton from './src/components/FloatingChatButton';
 import { theme } from './src/theme';
 import { toastConfig } from './src/utils/toastConfig';
+import { ensureNotifPermission } from './src/services/notifications';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
 });
 
 export default function App() {
+  // Ask for notification permission early so the SOS siren can fire reliably
+  // (Android 13+ drops notifications — and their sound — without it).
+  useEffect(() => { ensureNotifPermission(); }, []);
+
   return (
     <ReduxProvider store={store}>
       <PersistGate loading={null} persistor={persistor}>

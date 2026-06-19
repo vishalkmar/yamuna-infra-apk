@@ -80,6 +80,50 @@ export async function scheduleReminder(reminder) {
   }
 }
 
+// ── SOS alarm ────────────────────────────────────────────────────────────
+// Plays the custom siren (android/app/src/main/res/raw/sos_alarm.mp3) the
+// instant an SOS is fired. Uses a dedicated high-importance channel so the
+// custom sound (not the system default) is used, and rings even if the screen
+// is off. Bump the channel id if the sound/vibration ever changes.
+const SOS_CHANNEL_ID = 'sos-alarm-v1';
+const SOS_VIBRATION = [0, 500, 300, 500, 300, 500];
+
+export async function playSosAlarm() {
+  const mod = lib();
+  if (!mod || Platform.OS === 'web') return;
+  const notifee = mod.default;
+  const { AndroidImportance, AndroidCategory, AndroidVisibility } = mod;
+  try {
+    await notifee.requestPermission();
+    await notifee.createChannel({
+      id: SOS_CHANNEL_ID,
+      name: 'Emergency SOS',
+      importance: AndroidImportance.HIGH,
+      sound: 'sos_alarm', // raw/sos_alarm.mp3 (no extension)
+      vibration: true,
+      vibrationPattern: SOS_VIBRATION,
+      visibility: AndroidVisibility ? AndroidVisibility.PUBLIC : undefined,
+    });
+    await notifee.displayNotification({
+      id: 'sos-alarm',
+      title: '🆘 SOS Activated',
+      body: 'Emergency alert sent — help is on the way.',
+      android: {
+        channelId: SOS_CHANNEL_ID,
+        importance: AndroidImportance.HIGH,
+        category: AndroidCategory.ALARM,
+        sound: 'sos_alarm',
+        vibrationPattern: SOS_VIBRATION,
+        smallIcon: 'ic_launcher',
+        pressAction: { id: 'default' },
+        lightUpScreen: true,
+      },
+    });
+  } catch (e) {
+    // best-effort — never let the alarm break the SOS flow
+  }
+}
+
 export async function cancelReminder(id) {
   const mod = lib();
   if (!mod) return;

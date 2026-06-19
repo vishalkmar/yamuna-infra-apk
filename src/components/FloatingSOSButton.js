@@ -3,6 +3,7 @@ import { Text, StyleSheet, Pressable, Animated, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { activateSos, loadContacts } from '../store/slices/sosSlice';
 import { dispatchSos } from '../services/sos';
+import { playSosAlarm } from '../services/notifications';
 import { showToast } from '../utils/toastConfig';
 import { radius } from '../theme';
 
@@ -23,6 +24,7 @@ export default function FloatingSOSButton() {
   useEffect(() => { if (isLoggedIn) dispatch(loadContacts()); }, [isLoggedIn, dispatch]);
 
   const fire = useCallback(async () => {
+    playSosAlarm(); // custom siren immediately on activation
     try {
       const res = await dispatch(activateSos({})).unwrap();
       showToast('error', '🆘 SOS ACTIVATED', 'Help is on the way! Helpdesk notified.');
