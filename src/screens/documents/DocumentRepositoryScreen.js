@@ -21,6 +21,7 @@ import {
 } from '../../store/slices/documentSlice';
 import { initiateEsign } from '../../store/slices/bookingSlice';
 import { showToast } from '../../utils/toastConfig';
+import { paymentApi } from '../../api/paymentApi';
 
 const CATEGORY_META = {
   all:       { label: 'All',          icon: '📂' },
@@ -42,10 +43,22 @@ export default function DocumentRepositoryScreen({ navigation }) {
   const { documents, categories, filters, loading, selectionMode, selected, viewMode, bulkBusy }
     = useSelector(s => s.documents);
   const user = useSelector(s => s.auth.user);
+  const token = useSelector(s => s.auth.token);
   const bookingId = user?.bookingId || user?.primary_booking_id || 'BK-2024-00421';
 
   const [showFilters, setShowFilters] = useState(false);
   const [activeDoc, setActiveDoc] = useState(null);
+  const [stmtPropertyId, setStmtPropertyId] = useState(null);
+
+  // Resolve the resident's property so we can offer the payment statement (invoice).
+  useEffect(() => {
+    paymentApi.myProperties().then(list => { if (list?.length) setStmtPropertyId(list[0].id); }).catch(() => {});
+  }, []);
+
+  const downloadStatement = () => {
+    if (!stmtPropertyId) { showToast('info', 'No statement', 'No payment plan linked yet.'); return; }
+    Linking.openURL(paymentApi.statementUrl(stmtPropertyId, token)).catch(() => showToast('error', 'Cannot open', 'Try again.'));
+  };
 
   const reload = useCallback(() => {
     dispatch(loadDocuments({ bookingId, ...filters }));
@@ -151,6 +164,16 @@ export default function DocumentRepositoryScreen({ navigation }) {
                 ⚠  {categories.pendingSign} document{categories.pendingSign > 1 ? 's' : ''} need your signature
               </Text>
             ) : null}
+
+            {/* Payment statement (invoice) — direct download */}
+            <TouchableOpacity onPress={downloadStatement} style={styles.invoiceCard} activeOpacity={0.85}>
+              <Text style={styles.invoiceIcon}>🧾</Text>
+              <View style={{ flex: 1, marginLeft: spacing.sm }}>
+                <Text style={styles.invoiceTitle}>Payment Statement / Invoice</Text>
+                <Text style={styles.invoiceSub}>Tap to download the latest PDF</Text>
+              </View>
+              <Text style={styles.invoiceDl}>⬇ PDF</Text>
+            </TouchableOpacity>
 
             <Input
               placeholder="Search by name…"
@@ -366,6 +389,15 @@ const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
   viewSwap: { color: palette.primary, fontWeight: '600', fontSize: 12 },
   pendingNote: { ...typography.caption, color: palette.warning, marginBottom: spacing.sm, fontWeight: '600' },
+  invoiceCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#EEF2FF', borderColor: '#C7D2FE', borderWidth: 1,
+    borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.sm,
+  },
+  invoiceIcon: { fontSize: 22 },
+  invoiceTitle: { fontSize: 14, fontWeight: '700', color: palette.text },
+  invoiceSub: { ...typography.caption },
+  invoiceDl: { color: palette.primary, fontWeight: '800', fontSize: 13 },
 
   chip: {
     paddingHorizontal: 14, paddingVertical: 7,

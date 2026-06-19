@@ -6,7 +6,6 @@ import RewardsScreen from '../screens/rewards/RewardsScreen';
 import AICompanionScreen from '../screens/rewards/AICompanionScreen';
 import ProfileDetailsScreen from '../screens/profile/ProfileDetailsScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
-import SosManagementScreen from '../screens/sos/SosManagementScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import ScreenContainer from '../components/ScreenContainer';
 import Card from '../components/Card';
@@ -22,7 +21,6 @@ function ProfileHome({ navigation }) {
 
   const items = [
     { key: 'ProfileDetails', label: '👤  Profile Details', icon: '›' },
-    { key: 'SosManagement', label: '🆘  SOS Management', icon: '›' },
     { key: 'Rewards', label: '🎁  Rewards & Referrals', icon: '›' },
     { key: 'AICompanion', label: '🤖  Vrindavan Companion', icon: '›' },
     { key: 'NotificationsScreen', label: '🔔  Notifications', icon: '›' },
@@ -91,7 +89,6 @@ export default function ProfileStack() {
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen name="ProfileHome" component={ProfileHome} options={{ title: 'Profile' }} />
       <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} options={{ title: 'Profile Details' }} />
-      <Stack.Screen name="SosManagement" component={SosManagementScreen} options={{ title: 'SOS Management' }} />
       <Stack.Screen name="Rewards" component={RewardsScreen} options={{ title: 'Rewards' }} />
       <Stack.Screen name="AICompanion" component={AICompanionScreen} options={{ title: 'Vrindavan Companion' }} />
       <Stack.Screen name="NotificationsScreen" component={NotificationsScreen} options={{ title: 'Notifications' }} />

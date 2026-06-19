@@ -1,26 +1,20 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, Linking } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
-import Button from '../../components/Button';
 import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
-import EmergencyContactsSheet from '../../components/EmergencyContactsSheet';
 import { palette, radius, spacing, typography } from '../../theme';
 import { showToast } from '../../utils/toastConfig';
-import { dispatchSos } from '../../services/sos';
-import { loadContacts, activateSos, trackAmbulance } from '../../store/slices/sosSlice';
+import { loadContacts, activateSos } from '../../store/slices/sosSlice';
 
 const HOLD_MS = 3000;
-const REL_LABEL = r => (r ? r.charAt(0).toUpperCase() + r.slice(1) : '');
 
 export default function SOSScreen() {
   const dispatch = useDispatch();
-  const { contacts, bloodGroup, medicalNotes, activeRequest, activating } = useSelector(s => s.sos);
-  const userName = useSelector(s => s.auth.user?.name);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const { sosPhone, services, activeRequest, activating } = useSelector(s => s.sos);
   const [holding, setHolding] = useState(false);
   const progress = useRef(new Animated.Value(0)).current;
   const anim = useRef(null);
@@ -29,20 +23,12 @@ export default function SOSScreen() {
 
   const fire = useCallback(async () => {
     try {
-      const res = await dispatch(activateSos({})).unwrap();
-      showToast('error', '🆘 SOS ACTIVATED', 'Help is on the way! Helpdesk notified.');
-      setTimeout(() => showToast('info', 'Ambulance dispatched', `ETA ~${res.etaMinutes} min.`), 900);
-      const summary = await dispatchSos({ contacts, userName });
-      const where = summary.location ? 'with your live location' : '(location unavailable)';
-      setTimeout(() => showToast(
-        'success',
-        `${summary.notified || 0} contact(s) alerted`,
-        `Location ${where} sent via WhatsApp, SMS & email.`,
-      ), 1800);
+      await dispatch(activateSos({})).unwrap();
+      showToast('error', '🆘 SOS SENT', 'Reception alerted. Help is on the way!');
     } catch (e) {
       showToast('error', 'SOS failed', String(e));
     }
-  }, [dispatch, contacts, userName]);
+  }, [dispatch]);
 
   const start = () => {
     setHolding(true);
@@ -53,12 +39,13 @@ export default function SOSScreen() {
   const cancel = () => { anim.current?.stop(); setHolding(false); progress.setValue(0); };
 
   const ringWidth = progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const call = phone => phone && Linking.openURL(`tel:${phone}`).catch(() => {});
 
   return (
     <ScreenContainer refreshing={false} onRefresh={() => dispatch(loadContacts())}>
       <Text style={styles.intro}>
-        In an emergency, press and hold the button for 3 seconds. We'll alert the 24×7 helpdesk,
-        dispatch help and notify your family instantly.
+        In an emergency, press and hold the button for 3 seconds. Reception is alerted instantly with
+        your unit details so the team can reach you fast.
       </Text>
 
       {/* Hold to activate */}
@@ -70,59 +57,48 @@ export default function SOSScreen() {
         <View style={styles.track}><Animated.View style={[styles.fill, { width: ringWidth }]} /></View>
       </Pressable>
 
-      {/* Active request */}
       {activeRequest ? (
         <Card style={styles.activeCard}>
           <View style={styles.rowBetween}>
-            <Text style={styles.activeTitle}>🚑 {activeRequest.requestCode}</Text>
-            <StatusChip label={String(activeRequest.status).toUpperCase()} variant="error" />
+            <Text style={styles.activeTitle}>🆘 {activeRequest.requestCode}</Text>
+            <StatusChip label="SENT" variant="error" />
           </View>
-          <Text style={typography.caption}>
-            {activeRequest.ambulanceLabel} · ETA ~{activeRequest.etaMinutes} min
-            {activeRequest.gpsFix === false ? ' · sent with last known location' : ''}
-          </Text>
-          <Button
-            title="Refresh tracking"
-            variant="outline"
-            onPress={() => dispatch(trackAmbulance(activeRequest.id))}
-            style={{ marginTop: spacing.sm }}
-          />
+          <Text style={typography.caption}>Reception has been alerted. Stay safe — help is on the way.</Text>
         </Card>
       ) : null}
 
-      {/* Emergency contacts */}
-      <View style={styles.sectionHead}>
-        <Text style={typography.h3}>Emergency contacts</Text>
-        <Pressable onPress={() => setSheetOpen(true)}><Text style={styles.edit}>{contacts.length ? 'Edit' : 'Set up'}</Text></Pressable>
-      </View>
-      {contacts.length === 0 ? (
-        <EmptyState icon="📇" message="No emergency contacts yet. Set them up so we can alert family during an SOS." />
-      ) : (
-        contacts.map(c => (
-          <Card key={c.id || c.phone} style={styles.contactCard}>
+      {/* SOS dispatch number */}
+      {sosPhone ? (
+        <Pressable onPress={() => call(sosPhone)}>
+          <Card style={styles.sosCard}>
             <View style={styles.rowBetween}>
-              <Text style={styles.contactName}>{c.name}</Text>
-              {c.isPrimary ? <StatusChip label="PRIMARY" variant="primary" /> : null}
+              <View>
+                <Text style={styles.sosLabel}>SOS Control Room</Text>
+                <Text style={styles.sosNum}>{sosPhone}</Text>
+              </View>
+              <Text style={styles.callBtn}>📞 Call</Text>
             </View>
-            <Text style={typography.caption}>+91 {c.phone} · {REL_LABEL(c.relation)}</Text>
           </Card>
-        ))
-      )}
-
-      {/* Medical info */}
-      {(bloodGroup || medicalNotes) ? (
-        <Card style={{ marginTop: spacing.md }}>
-          <Text style={typography.label}>Medical info</Text>
-          {bloodGroup ? <Text style={styles.med}>Blood group: <Text style={styles.medStrong}>{bloodGroup}</Text></Text> : null}
-          {medicalNotes ? <Text style={styles.med}>{medicalNotes}</Text> : null}
-        </Card>
+        </Pressable>
       ) : null}
 
-      <EmergencyContactsSheet
-        visible={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        onSaved={() => dispatch(loadContacts())}
-      />
+      {/* Emergency services (admin-managed) */}
+      <View style={styles.sectionHead}><Text style={typography.h3}>Emergency contacts</Text></View>
+      {(!services || services.length === 0) ? (
+        <EmptyState icon="📇" message="No emergency contacts available yet." />
+      ) : services.map(c => (
+        <Pressable key={c.id} onPress={() => call(c.phone)}>
+          <Card style={styles.contactCard}>
+            <View style={styles.rowBetween}>
+              <View>
+                <Text style={styles.contactName}>{c.name}</Text>
+                <Text style={typography.caption}>{c.phone}</Text>
+              </View>
+              <Text style={styles.callBtn}>📞 Call</Text>
+            </View>
+          </Card>
+        </Pressable>
+      ))}
     </ScreenContainer>
   );
 }
@@ -143,13 +119,14 @@ const styles = StyleSheet.create({
 
   activeCard: { borderColor: '#FCA5A5', backgroundColor: '#FEF2F2', marginBottom: spacing.md },
   activeTitle: { fontSize: 15, fontWeight: '800', color: '#B91C1C' },
-  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+
+  sosCard: { backgroundColor: '#FEF2F2', borderColor: '#FCA5A5', marginBottom: spacing.md },
+  sosLabel: { ...typography.caption, color: '#B91C1C', fontWeight: '700' },
+  sosNum: { fontSize: 18, fontWeight: '800', color: palette.text, marginTop: 2 },
 
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm, marginTop: spacing.sm },
-  edit: { color: palette.primary, fontWeight: '700', fontSize: 13 },
   contactCard: { marginBottom: spacing.sm },
   contactName: { fontSize: 15, fontWeight: '700', color: palette.text },
-
-  med: { ...typography.body, marginTop: 4 },
-  medStrong: { fontWeight: '800', color: palette.text },
+  callBtn: { color: palette.primary, fontWeight: '800', fontSize: 14 },
 });

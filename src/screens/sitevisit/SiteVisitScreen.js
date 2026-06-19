@@ -1,216 +1,151 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Image, FlatList, Dimensions } from 'react-native';
 
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
-import Button from '../../components/Button';
-import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
-import VirtualTourSection from '../../components/VirtualTourSection';
-import BookVisitSheet from '../../components/BookVisitSheet';
 import { palette, radius, spacing, typography } from '../../theme';
 import { formatDate } from '../../utils/format';
-import {
-  loadVirtualTours,
-  loadMyVisits,
-  cancelVisit,
-} from '../../store/slices/siteVisitSlice';
-import { showToast } from '../../utils/toastConfig';
+import { siteApi } from '../../api/siteApi';
+import { sosApi } from '../../api/sosApi';
 
-const DEFAULT_PROJECT_ID = 1; // Vrindavan Heights — resolved from booking in real flow.
-
-const STATUS_VARIANT = {
-  booked: 'info',
-  rescheduled: 'warning',
-  completed: 'success',
-  cancelled: 'error',
-};
-
-const TYPE_LABEL = {
-  personal: 'Personal',
-  family: 'With family',
-  banker: 'With banker',
-};
-
-export function to12h(t24) {
-  if (!t24) return '';
-  const [hh, mm] = String(t24).split(':').map(Number);
-  const period = hh >= 12 ? 'PM' : 'AM';
-  const hh12 = ((hh + 11) % 12) + 1;
-  return `${hh12}:${String(mm).padStart(2, '0')} ${period}`;
-}
-
+// Site Overview — admin-managed, the same for every resident (images, map,
+// emergency contacts, progress + updates). No booking here.
 export default function SiteVisitScreen() {
-  const dispatch = useDispatch();
-  const { tours, toursLoading, visits, visitsLoading, cancelBusy } = useSelector(s => s.siteVisit);
+  const [data, setData] = useState(null);
+  const [sos, setSos] = useState({ sosPhone: null, services: [] });
+  const [loading, setLoading] = useState(true);
+  const w = Dimensions.get('window').width - spacing.lg * 2;
 
-  const projectId = DEFAULT_PROJECT_ID;
-  const [bookOpen, setBookOpen] = useState(false);
-  const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [ov, contacts] = await Promise.all([siteApi.getOverview(), sosApi.getContacts().catch(() => ({}))]);
+      setData(ov);
+      setSos({ sosPhone: contacts?.sosPhone || null, services: contacts?.services || [] });
+    } catch (e) { /* show empty */ } finally { setLoading(false); }
+  }, []);
 
-  const reload = useCallback(() => {
-    dispatch(loadVirtualTours(projectId));
-    dispatch(loadMyVisits({}));
-  }, [dispatch, projectId]);
+  useEffect(() => { load(); }, [load]);
 
-  useEffect(() => { reload(); }, [reload]);
+  const open = url => url && Linking.openURL(url).catch(() => {});
+  const call = phone => phone && Linking.openURL(`tel:${phone}`).catch(() => {});
 
-  const onCancel = visit => {
-    Alert.alert(
-      'Cancel site visit?',
-      `Visit on ${formatDate(visit.visitDate)} at ${to12h(visit.visitTime)} will be cancelled.`,
-      [
-        { text: 'Keep it', style: 'cancel' },
-        {
-          text: 'Cancel visit',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await dispatch(cancelVisit({ visitId: visit.id })).unwrap();
-              showToast('warning', 'Visit cancelled', 'To reschedule, tap the Reschedule button.');
-            } catch (e) {
-              showToast('error', 'Could not cancel', String(e));
-            }
-          },
-        },
-      ],
-    );
-  };
+  if (loading && !data) {
+    return <ScreenContainer><CardSkeleton /><CardSkeleton /></ScreenContainer>;
+  }
 
-  const upcoming = visits.filter(v => v.status === 'booked' || v.status === 'rescheduled');
-  const past = visits.filter(v => v.status === 'completed' || v.status === 'cancelled');
+  const cfg = data?.config || {};
+  const images = data?.images || [];
+  const updates = data?.updates || [];
 
   return (
-    <ScreenContainer refreshing={visitsLoading || toursLoading} onRefresh={reload}>
-      {/* Hero / intro */}
-      <Card style={styles.hero}>
-        <Text style={styles.heroTitle}>Site Visit & Virtual Tour</Text>
-        <Text style={styles.heroSub}>
-          Book a personal visit to Vrindavan Heights, or explore from anywhere with a 360° tour.
-        </Text>
-        <Button
-          title="Book a Site Visit"
-          variant="secondary"
-          onPress={() => setBookOpen(true)}
-          style={{ marginTop: spacing.md }}
+    <ScreenContainer refreshing={loading} onRefresh={load}>
+      {/* Images */}
+      {images.length > 0 ? (
+        <FlatList
+          horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+          data={images}
+          keyExtractor={i => String(i.id)}
+          style={{ marginHorizontal: -spacing.lg, marginBottom: spacing.md }}
+          renderItem={({ item }) => (
+            <View style={{ width: w + spacing.lg * 2, paddingHorizontal: spacing.lg }}>
+              <Image source={{ uri: item.url }} style={styles.hero} resizeMode="cover" />
+              {item.caption ? <Text style={styles.caption}>{item.caption}</Text> : null}
+            </View>
+          )}
         />
+      ) : null}
+
+      <Text style={styles.title}>{cfg.title || 'Site Overview'}</Text>
+      {cfg.address ? <Text style={typography.bodyMuted}>{cfg.address}</Text> : null}
+
+      {/* Map */}
+      {cfg.mapUrl ? (
+        <TouchableOpacity onPress={() => open(cfg.mapUrl)}>
+          <Card style={styles.mapCard}>
+            <Text style={styles.mapText}>📍  Open site location on Google Maps</Text>
+          </Card>
+        </TouchableOpacity>
+      ) : null}
+
+      {/* Progress */}
+      <Text style={[typography.h3, styles.sectionTitle]}>Construction progress</Text>
+      <Card>
+        <View style={styles.rowBetween}>
+          <Text style={styles.pctBig}>{cfg.progressPercent || 0}%</Text>
+          {cfg.progressNote ? <Text style={[typography.caption, { flex: 1, marginLeft: spacing.md }]}>{cfg.progressNote}</Text> : null}
+        </View>
+        <View style={styles.bar}><View style={[styles.fill, { width: `${cfg.progressPercent || 0}%` }]} /></View>
       </Card>
 
-      {/* Virtual tours */}
-      {toursLoading && tours.length === 0 ? <CardSkeleton /> : <VirtualTourSection tours={tours} />}
-
-      {/* Upcoming visits */}
-      <Text style={[typography.h3, styles.sectionTitle]}>Upcoming visits</Text>
-      {visitsLoading && visits.length === 0 ? (
-        <CardSkeleton />
-      ) : upcoming.length === 0 ? (
-        <EmptyState icon="📅" message="No upcoming visits. Book one above!" />
-      ) : (
-        upcoming.map(v => (
-          <VisitCard
-            key={v.id}
-            visit={v}
-            cancelBusy={cancelBusy}
-            onReschedule={() => setRescheduleTarget(v)}
-            onCancel={() => onCancel(v)}
-          />
-        ))
-      )}
-
-      {/* Past visits */}
-      {past.length > 0 ? (
+      {/* Updates */}
+      {updates.length > 0 ? (
         <>
-          <Text style={[typography.h3, styles.sectionTitle]}>Past visits</Text>
-          {past.map(v => <VisitCard key={v.id} visit={v} />)}
+          <Text style={[typography.h3, styles.sectionTitle]}>Site updates</Text>
+          {updates.map(u => (
+            <Card key={u.id} style={styles.updCard}>
+              {u.mediaUrl ? <Image source={{ uri: u.mediaUrl }} style={styles.updImg} resizeMode="cover" /> : null}
+              <Text style={styles.updTitle}>{u.title}</Text>
+              {u.description ? <Text style={typography.caption}>{u.description}</Text> : null}
+              <Text style={[typography.caption, { marginTop: 4 }]}>{formatDate(u.postedAt)}</Text>
+            </Card>
+          ))}
         </>
       ) : null}
 
-      {/* Book sheet */}
-      <BookVisitSheet
-        visible={bookOpen}
-        projectId={projectId}
-        onClose={() => setBookOpen(false)}
-        onBooked={() => { setBookOpen(false); reload(); }}
-      />
-
-      {/* Reschedule sheet (same form, reschedule mode) */}
-      <BookVisitSheet
-        visible={!!rescheduleTarget}
-        projectId={projectId}
-        rescheduleVisit={rescheduleTarget}
-        onClose={() => setRescheduleTarget(null)}
-        onBooked={() => { setRescheduleTarget(null); reload(); }}
-      />
+      {/* Emergency & SOS */}
+      <Text style={[typography.h3, styles.sectionTitle]}>Emergency & SOS</Text>
+      {sos.sosPhone ? (
+        <TouchableOpacity onPress={() => call(sos.sosPhone)}>
+          <Card style={styles.sosCard}>
+            <View style={styles.rowBetween}>
+              <View><Text style={styles.sosLabel}>SOS Control Room</Text><Text style={styles.sosNum}>{sos.sosPhone}</Text></View>
+              <Text style={styles.callBtn}>📞 Call</Text>
+            </View>
+          </Card>
+        </TouchableOpacity>
+      ) : null}
+      {sos.services.map(c => (
+        <TouchableOpacity key={c.id} onPress={() => call(c.phone)}>
+          <Card style={styles.contactCard}>
+            <View style={styles.rowBetween}>
+              <View><Text style={styles.contactName}>{c.name}</Text><Text style={typography.caption}>{c.phone}</Text></View>
+              <Text style={styles.callBtn}>📞 Call</Text>
+            </View>
+          </Card>
+        </TouchableOpacity>
+      ))}
+      {!sos.sosPhone && sos.services.length === 0 ? (
+        <EmptyState icon="📇" message="Emergency contacts will appear here." />
+      ) : null}
     </ScreenContainer>
   );
 }
 
-function VisitCard({ visit, cancelBusy, onReschedule, onCancel }) {
-  const actionable = visit.status === 'booked' || visit.status === 'rescheduled';
-  return (
-    <Card style={styles.visitCard}>
-      <View style={styles.visitTop}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.visitDate}>
-            {formatDate(visit.visitDate)} · {to12h(visit.visitTime)}
-          </Text>
-          <Text style={typography.caption}>
-            {visit.projectName} · {TYPE_LABEL[visit.visitType] || visit.visitType} · {visit.visitorCount}
-            {visit.visitorCount === 1 ? ' person' : ' persons'}
-          </Text>
-          {visit.confirmationCode ? (
-            <Text style={styles.code}>{visit.confirmationCode}</Text>
-          ) : null}
-        </View>
-        <StatusChip
-          label={String(visit.status).toUpperCase()}
-          variant={STATUS_VARIANT[visit.status] || 'neutral'}
-        />
-      </View>
-
-      {actionable ? (
-        <View style={styles.actions}>
-          <TouchableOpacity style={styles.actionBtn} onPress={onReschedule}>
-            <Text style={styles.actionText}>Reschedule</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.cancelBtn]}
-            disabled={cancelBusy}
-            onPress={onCancel}
-          >
-            <Text style={[styles.actionText, styles.cancelText]}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
-    </Card>
-  );
-}
-
 const styles = StyleSheet.create({
-  hero: { backgroundColor: palette.primary, borderColor: palette.primary, marginBottom: spacing.lg },
-  heroTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
-  heroSub: { color: '#DBE3FF', fontSize: 13, marginTop: 6, lineHeight: 19 },
+  hero: { width: '100%', height: 190, borderRadius: radius.md, backgroundColor: palette.surfaceAlt },
+  caption: { ...typography.caption, marginTop: 6 },
+  title: { ...typography.h2, marginTop: spacing.sm },
 
-  sectionTitle: { marginBottom: spacing.sm, marginTop: spacing.md },
+  mapCard: { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE', marginTop: spacing.md },
+  mapText: { color: palette.primary, fontWeight: '700', fontSize: 14 },
 
-  visitCard: { marginBottom: spacing.sm },
-  visitTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  visitDate: { fontSize: 15, fontWeight: '700', color: palette.text },
-  code: { fontSize: 11, color: palette.textMuted, marginTop: 4, letterSpacing: 0.4 },
+  sectionTitle: { marginTop: spacing.lg, marginBottom: spacing.sm },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  pctBig: { fontSize: 28, fontWeight: '900', color: palette.primary },
+  bar: { height: 8, borderRadius: 4, backgroundColor: palette.surfaceAlt, overflow: 'hidden', marginTop: spacing.md },
+  fill: { height: '100%', backgroundColor: palette.success || '#16A34A' },
 
-  actions: { flexDirection: 'row', marginTop: spacing.md, gap: spacing.sm },
-  actionBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: palette.primary,
-    alignItems: 'center',
-    marginRight: spacing.sm,
-  },
-  actionText: { color: palette.primary, fontWeight: '700', fontSize: 13 },
-  cancelBtn: { borderColor: palette.error, marginRight: 0 },
-  cancelText: { color: palette.error },
+  updCard: { marginBottom: spacing.sm },
+  updImg: { width: '100%', height: 160, borderRadius: radius.sm, backgroundColor: palette.surfaceAlt, marginBottom: spacing.sm },
+  updTitle: { fontSize: 15, fontWeight: '700', color: palette.text },
+
+  sosCard: { backgroundColor: '#FEF2F2', borderColor: '#FCA5A5', marginBottom: spacing.sm },
+  sosLabel: { ...typography.caption, color: '#B91C1C', fontWeight: '700' },
+  sosNum: { fontSize: 18, fontWeight: '800', color: palette.text, marginTop: 2 },
+  contactCard: { marginBottom: spacing.sm },
+  contactName: { fontSize: 15, fontWeight: '700', color: palette.text },
+  callBtn: { color: palette.primary, fontWeight: '800', fontSize: 14 },
 });

@@ -15,7 +15,7 @@ const DRAWER_ITEMS = [
   { key: 'ConstructionTracker', label: 'Construction Progress', icon: '🏗️', tab: 'HomeTab', screen: 'ConstructionTracker' },
   { key: 'DocumentRepository', label: 'Documents', icon: '📄', tab: 'HomeTab', screen: 'DocumentRepository' },
   { key: 'PossessionDashboard', label: 'Possession', icon: '🔑', tab: 'HomeTab', screen: 'PossessionDashboard' },
-  { key: 'SiteVisit', label: 'Site Visit', icon: '🗺️', tab: 'HomeTab', screen: 'SiteVisit' },
+  { key: 'SiteVisit', label: 'Site Overview', icon: '🗺️', tab: 'HomeTab', screen: 'SiteVisit' },
   { key: 'Support', label: 'Support', icon: '🎧', tab: 'HomeTab', screen: 'Support' },
   { key: 'ResidentTab', label: 'Resident Services', icon: '🛎️', tab: 'ResidentTab' },
   { key: 'CommunityTab', label: 'Community', icon: '👥', tab: 'CommunityTab' },

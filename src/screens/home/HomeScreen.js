@@ -15,7 +15,7 @@ const QUICK_TILES = [
   { key: 'PaymentDashboard', label: 'Payments', icon: '💳', color: '#F0FDF4' },
   { key: 'ConstructionTracker', label: 'Progress', icon: '🏗️', color: '#FEF3C7' },
   { key: 'DocumentRepository', label: 'Documents', icon: '📄', color: '#DBEAFE' },
-  { key: 'SiteVisit', label: 'Site Visit', icon: '🗺️', color: '#FFE4E6' },
+  { key: 'SiteVisit', label: 'Site\nOverview', icon: '🗺️', color: '#FFE4E6' },
   { key: 'Support', label: 'Support', icon: '🎧', color: '#F3E8FF' },
 ];
 

@@ -33,7 +33,7 @@ export default function HomeStack() {
       <Stack.Screen name="PaymentDashboard" component={PaymentDashboardScreen} options={{ title: 'Payments' }} />
       <Stack.Screen name="DocumentRepository" component={DocumentRepositoryScreen} options={{ title: 'Documents' }} />
       <Stack.Screen name="ConstructionTracker" component={ConstructionTrackerScreen} options={{ title: 'Construction Progress' }} />
-      <Stack.Screen name="SiteVisit" component={SiteVisitScreen} options={{ title: 'Site Visit' }} />
+      <Stack.Screen name="SiteVisit" component={SiteVisitScreen} options={{ title: 'Site Overview' }} />
       <Stack.Screen name="Support" component={SupportScreen} options={{ title: 'Support' }} />
       <Stack.Screen name="TicketDetail" component={TicketDetailScreen} options={{ title: 'Ticket' }} />
       <Stack.Screen name="PossessionDashboard" component={PossessionDashboardScreen} options={{ title: 'Possession' }} />

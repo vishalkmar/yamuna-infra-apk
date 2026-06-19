@@ -9,7 +9,7 @@ import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
 import { palette, spacing, typography } from '../../theme';
 import { formatDate } from '../../utils/format';
-import { KYC_STATUS, RELATION_LABEL, LANGUAGE_LABEL, DIETARY_LABEL } from '../../utils/profile';
+import { LANGUAGE_LABEL, DIETARY_LABEL } from '../../utils/profile';
 import { loadProfile } from '../../store/slices/profileSlice';
 
 const GENDER_LABEL = { male: 'Male', female: 'Female', other: 'Other' };
@@ -36,7 +36,7 @@ function SectionHead({ title }) {
 // resident can view but not edit or delete anything here.
 export default function ProfileDetailsScreen() {
   const dispatch = useDispatch();
-  const { personal, preferences, family, properties, kyc, loading } = useSelector(s => s.profile);
+  const { personal, preferences, properties, loading } = useSelector(s => s.profile);
 
   const reload = useCallback(() => { dispatch(loadProfile()); }, [dispatch]);
   useEffect(() => { reload(); }, [reload]);
@@ -45,7 +45,6 @@ export default function ProfileDetailsScreen() {
     return <ScreenContainer><CardSkeleton /><CardSkeleton /></ScreenContainer>;
   }
 
-  const ks = KYC_STATUS[kyc?.status] || KYC_STATUS.not_started;
   const ch = preferences?.channels || {};
   const channelsOn = Object.entries(ch).filter(([, v]) => v).map(([k]) => k);
 
@@ -109,30 +108,7 @@ export default function ProfileDetailsScreen() {
         <Field label="Festival alerts" value={preferences?.festivalAlerts ? 'On' : 'Off'} />
       </Card>
 
-      {/* Family (read-only) */}
-      <SectionHead title="Family members" />
-      {(!family || family.length === 0) ? (
-        <EmptyState icon="👨‍👩‍👧" message="No family members on record." />
-      ) : family.map(m => (
-        <Card key={m.id} style={styles.card}>
-          <Text style={styles.name}>{m.name}</Text>
-          <Text style={typography.caption}>
-            {RELATION_LABEL(m.relation)}{m.age != null ? ` · ${m.age} yrs` : ''}{m.phone ? ` · +91 ${m.phone}` : ''}
-          </Text>
-        </Card>
-      ))}
-
-      {/* KYC (read-only) */}
-      <SectionHead title="KYC verification" />
-      <Card style={styles.card}>
-        <View style={styles.rowBetween}>
-          <Text style={styles.name}>Identity status</Text>
-          <StatusChip label={ks.label.toUpperCase()} variant={ks.variant} />
-        </View>
-        {kyc?.idNumberMasked ? (
-          <Text style={typography.caption}>{String(kyc.idType || '').toUpperCase()} · {kyc.idNumberMasked}</Text>
-        ) : null}
-      </Card>
+      {/* Family members & KYC removed per product decision. */}
 
       <Text style={styles.footNote}>
         Your profile is managed by the Yamuna Infra office. To update any detail, please contact us.

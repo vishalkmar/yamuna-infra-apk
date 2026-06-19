@@ -25,7 +25,7 @@ import { paymentApi } from '../../api/paymentApi';
 import { showToast } from '../../utils/toastConfig';
 
 const TABS = [
-  { key: 'upcoming', label: 'Upcoming' },
+  { key: 'upcoming', label: 'All status' },
   { key: 'history',  label: 'History' },
   { key: 'ledger',   label: 'Ledger' },
 ];
@@ -380,7 +380,7 @@ function PaymentRow({ item }) {
         </View>
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={styles.rowAmount}>{formatINR(item.amount)}</Text>
-          <StatusChip label={item.status.toUpperCase()} variant="success" />
+          <StatusChip label={(item.status || 'success').toUpperCase()} variant="success" />
         </View>
       </View>
     </Card>

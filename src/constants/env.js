@@ -1,5 +1,5 @@
 export const ENV = {
-  API_BASE_URL: 'https://backend.iccict.org/api',
+  API_BASE_URL: 'https://yamuna-infra-backend.onrender.com/api',
   API_TIMEOUT_MS: 15000,
   RAZORPAY_KEY: 'rzp_test_PLACEHOLDER',
   GOOGLE_MAPS_KEY: 'PLACEHOLDER',

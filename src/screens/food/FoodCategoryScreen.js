@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -7,6 +7,7 @@ import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
 import CartBar from '../../components/CartBar';
+import FoodItemDetailSheet from '../../components/FoodItemDetailSheet';
 import { palette, radius, spacing, typography } from '../../theme';
 import { formatINR } from '../../utils/format';
 import { qtyOf } from '../../utils/cart';
@@ -16,6 +17,7 @@ export default function FoodCategoryScreen({ route, navigation }) {
   const { categoryCode, categoryName } = route.params || {};
   const dispatch = useDispatch();
   const { items, itemsLoading, cart } = useSelector(s => s.food);
+  const [detailItem, setDetailItem] = useState(null);
 
   const reload = useCallback(() => { dispatch(loadFoodItems(categoryCode)); }, [dispatch, categoryCode]);
   useEffect(() => { reload(); }, [reload]);
@@ -33,14 +35,19 @@ export default function FoodCategoryScreen({ route, navigation }) {
           const qty = qtyOf(cart, item.id);
           return (
             <Card key={item.id} style={styles.card}>
-              <Image source={{ uri: item.image }} style={styles.image} />
+              <TouchableOpacity onPress={() => setDetailItem(item)} activeOpacity={0.85}>
+                <Image source={{ uri: item.image }} style={styles.image} />
+              </TouchableOpacity>
               <View style={styles.info}>
-                <View style={styles.rowTop}>
-                  <Text style={styles.vegDot}>{item.veg ? '🟢' : '🔴'}</Text>
-                  <Text style={styles.name}>{item.name}</Text>
-                </View>
-                <Text style={styles.rating}>★ {item.rating}</Text>
-                <Text style={styles.desc} numberOfLines={2}>{item.description}</Text>
+                <TouchableOpacity onPress={() => setDetailItem(item)} activeOpacity={0.7}>
+                  <View style={styles.rowTop}>
+                    <Text style={styles.vegDot}>{item.veg ? '🟢' : '🔴'}</Text>
+                    <Text style={styles.name}>{item.name}</Text>
+                  </View>
+                  <Text style={styles.rating}>★ {item.rating}</Text>
+                  <Text style={styles.desc} numberOfLines={2}>{item.description}</Text>
+                  <Text style={styles.viewMore}>View details ›</Text>
+                </TouchableOpacity>
                 <View style={styles.rowBetween}>
                   <Text style={styles.price}>{formatINR(item.price)}</Text>
                   {qty === 0 ? (
@@ -62,6 +69,15 @@ export default function FoodCategoryScreen({ route, navigation }) {
       </ScreenContainer>
 
       <CartBar onPress={() => navigation.navigate('FoodCart')} />
+
+      <FoodItemDetailSheet
+        item={detailItem}
+        qty={detailItem ? qtyOf(cart, detailItem.id) : 0}
+        onClose={() => setDetailItem(null)}
+        onAdd={it => dispatch(addToCart(it))}
+        onInc={id => dispatch(incItem(id))}
+        onDec={id => dispatch(decItem(id))}
+      />
     </View>
   );
 }
@@ -77,6 +93,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 15, fontWeight: '700', color: palette.text, flex: 1 },
   rating: { fontSize: 12, fontWeight: '700', color: palette.accent, marginTop: 2 },
   desc: { fontSize: 12, color: palette.textMuted, marginTop: 2, lineHeight: 16 },
+  viewMore: { fontSize: 11, color: palette.primary, fontWeight: '700', marginTop: 4 },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
   price: { fontSize: 15, fontWeight: '800', color: palette.text },
   addBtn: { borderWidth: 1, borderColor: palette.primary, borderRadius: radius.md, paddingHorizontal: spacing.lg, paddingVertical: 6, backgroundColor: '#EEF2FF' },
