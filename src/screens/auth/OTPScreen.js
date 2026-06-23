@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import ScreenContainer from '../../components/ScreenContainer';
 import Button from '../../components/Button';
@@ -76,9 +76,16 @@ export default function OTPScreen() {
   return (
     <ScreenContainer>
       <View>
-        <View style={{ marginTop: spacing.xl }}>
-          <Text style={typography.h1}>Verify OTP</Text>
-          <Text style={[typography.bodyMuted, { marginTop: 6 }]}>
+        <View style={styles.logoBadge}>
+          <Image
+            source={require('../../../logo.png')}
+            style={styles.logoImg}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={{ marginTop: spacing.lg }}>
+          <Text style={[typography.h1, styles.center]}>Verify OTP</Text>
+          <Text style={[typography.bodyMuted, styles.center, { marginTop: 6 }]}>
             Enter the 6-digit code sent to{'\n'}
             <Text style={styles.mobile}>{email}</Text>
           </Text>
@@ -117,6 +124,18 @@ export default function OTPScreen() {
 }
 
 const styles = StyleSheet.create({
+  center: { textAlign: 'center' },
+  logoBadge: {
+    width: 88, height: 88, borderRadius: 22,
+    backgroundColor: '#fff',
+    alignItems: 'center', justifyContent: 'center',
+    alignSelf: 'center',
+    marginTop: spacing.xxl,
+    borderWidth: 1, borderColor: palette.divider,
+    shadowColor: palette.primary, shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  logoImg: { width: 64, height: 64 },
   mobile: { fontWeight: '700', color: palette.text },
   row: {
     flexDirection: 'row',

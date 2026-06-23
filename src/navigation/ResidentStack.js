@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeCleaningScreen from '../screens/services/HomeCleaningScreen';
 import HousekeepingScreen from '../screens/services/HousekeepingScreen';
@@ -12,26 +12,44 @@ import HealthcareScreen from '../screens/services/HealthcareScreen';
 import WheelchairScreen from '../screens/services/WheelchairScreen';
 import WellnessScreen from '../screens/services/WellnessScreen';
 import SpiritualScreen from '../screens/services/SpiritualScreen';
-import { Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Animated, Easing } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import { palette, radius, spacing, typography } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
 const SERVICES = [
-  { key: 'HomeServices', label: 'Home Cleaning', icon: '🧹' },
-  { key: 'Housekeeping', label: 'Housekeeping', icon: '🧺' },
-  { key: 'CookBooking', label: 'Book a Cook', icon: '👨‍🍳' },
-  { key: 'MealOrder', label: 'Meal Tiffin', icon: '🍱' },
-  { key: 'HealthcareScreen', label: 'Doctor & Healthcare', icon: '🩺' },
-  { key: 'Wheelchair', label: 'Mobility Aid', icon: '🦽' },
-  { key: 'WellnessScreen', label: 'Wellness & Spa', icon: '🧘' },
-  { key: 'SpiritualScreen', label: 'Spiritual Concierge', icon: '🕉️' },
-  { key: 'TempleDirectoryScreen', label: 'Temple Directory', icon: '🛕' },
-  { key: 'Darshan', label: 'Darshan & Transport', icon: '🚕' },
+  { key: 'HomeServices', label: 'Home Cleaning', icon: '🧹', tint: '#E8EEFF' },
+  { key: 'Housekeeping', label: 'Housekeeping', icon: '🧺', tint: '#FFF0D6' },
+  { key: 'CookBooking', label: 'Book a Cook', icon: '👨‍🍳', tint: '#FCE4E8' },
+  { key: 'MealOrder', label: 'Meal Tiffin', icon: '🍱', tint: '#E4F6EC' },
+  { key: 'HealthcareScreen', label: 'Doctor & Healthcare', icon: '🩺', tint: '#E6F4FB' },
+  { key: 'Wheelchair', label: 'Mobility Aid', icon: '🦽', tint: '#EDE7FF' },
+  { key: 'WellnessScreen', label: 'Wellness & Spa', icon: '🧘', tint: '#FFF0D6' },
+  { key: 'SpiritualScreen', label: 'Spiritual Concierge', icon: '🕉️', tint: '#FCE4E8' },
+  { key: 'TempleDirectoryScreen', label: 'Temple Directory', icon: '🛕', tint: '#E8EEFF' },
+  { key: 'Darshan', label: 'Darshan & Transport', icon: '🚕', tint: '#E4F6EC' },
 ];
 
 function ResidentHome({ navigation }) {
+  // One shared spin value drives the rotating ring on every card (cheap, and
+  // keeps all rings in sync).
+  const spin = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 4000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [spin]);
+
+  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+
   return (
     <ScreenContainer>
       <Text style={typography.h1}>Resident Services</Text>
@@ -43,13 +61,19 @@ function ResidentHome({ navigation }) {
         keyExtractor={i => i.key}
         scrollEnabled={false}
         numColumns={2}
-        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: spacing.sm }}
+        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: spacing.md }}
         renderItem={({ item }) => (
           <TouchableOpacity
+            activeOpacity={0.85}
             style={styles.tile}
             onPress={() => navigation.navigate(item.key)}
           >
-            <Text style={{ fontSize: 32 }}>{item.icon}</Text>
+            <View style={styles.ringWrap}>
+              <Animated.View style={[styles.ring, { transform: [{ rotate }] }]} />
+              <View style={[styles.iconCircle, { backgroundColor: item.tint }]}>
+                <Text style={styles.icon}>{item.icon}</Text>
+              </View>
+            </View>
             <Text style={styles.tileLabel}>{item.label}</Text>
           </TouchableOpacity>
         )}
@@ -58,17 +82,53 @@ function ResidentHome({ navigation }) {
   );
 }
 
+const RING = 88;
 const styles = StyleSheet.create({
   tile: {
     width: '48%',
-    padding: spacing.lg,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
     backgroundColor: palette.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: palette.divider,
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    shadowColor: palette.primary,
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 4,
   },
-  tileLabel: { fontSize: 14, fontWeight: '600', color: palette.text, marginTop: spacing.sm },
+  ringWrap: {
+    width: RING, height: RING,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  ring: {
+    position: 'absolute',
+    width: RING, height: RING,
+    borderRadius: RING / 2,
+    borderWidth: 3,
+    borderColor: 'rgba(245,166,35,0.18)',
+    borderTopColor: palette.accent,
+    borderRightColor: palette.accent,
+  },
+  iconCircle: {
+    width: 62, height: 62,
+    borderRadius: 31,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    // Raised, slightly tilted 3D look.
+    transform: [{ perspective: 600 }, { rotateX: '14deg' }],
+    shadowColor: '#000',
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  icon: { fontSize: 30 },
+  tileLabel: { fontSize: 14, fontWeight: '600', color: palette.text, textAlign: 'center' },
 });
 
 const screenOptions = {

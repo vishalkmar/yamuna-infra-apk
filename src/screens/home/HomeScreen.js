@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
@@ -10,24 +10,47 @@ import { formatINR, formatDate, daysUntil } from '../../utils/format';
 import { loadMyProperties, loadProgress } from '../../store/slices/projectSlice';
 import { loadMyProperties as loadPayProperties, loadSchedule as loadPaySchedule } from '../../store/slices/paymentSlice';
 
+// Grid columns sized to the screen so incomplete rows stay left-aligned.
+// The -1 buffer avoids sub-pixel overflow that would wrap the last column.
+const GRID_GAP = 10;
+const SCREEN_W = Dimensions.get('window').width;
+const colWidth = n => Math.floor((SCREEN_W - spacing.lg * 2 - GRID_GAP * (n - 1)) / n) - 1;
+const QUICK_W = colWidth(3);
+const SVC_W = colWidth(4);
+
 const QUICK_TILES = [
-  { key: 'BookingDocket', label: 'Booking\nDocket', icon: '📘', color: '#EEF2FF' },
-  { key: 'PaymentDashboard', label: 'Payments', icon: '💳', color: '#F0FDF4' },
-  { key: 'ConstructionTracker', label: 'Progress', icon: '🏗️', color: '#FEF3C7' },
-  { key: 'SiteVisit', label: 'Site\nOverview', icon: '🗺️', color: '#FFE4E6' },
-  { key: 'Support', label: 'Support', icon: '🎧', color: '#F3E8FF' },
+  { key: 'BookingDocket', label: 'Booking\nDocket', icon: '📘', tint: '#E8EEFF' },
+  { key: 'PaymentDashboard', label: 'Payments', icon: '💳', tint: '#E4F6EC' },
+  { key: 'ConstructionTracker', label: 'Progress', icon: '🏗️', tint: '#FFF0D6' },
+  { key: 'SiteVisit', label: 'Site\nOverview', icon: '🗺️', tint: '#FCE4E8' },
+  { key: 'Support', label: 'Support', icon: '🎧', tint: '#EDE7FF' },
+  { key: 'ProfileTab', label: 'Profile', icon: '👤', tint: '#E6F4FB' },
 ];
 
-// These screens live in other tabs' stacks, so navigate to the tab first,
-// then the nested screen (cross-navigator navigation).
+// Every resident service, navigating into the Services tab's stack.
 const SERVICE_TILES = [
-  { key: 'HomeServices', tab: 'ResidentTab', label: 'Cleaning', icon: '🧹' },
-  { key: 'HealthcareScreen', tab: 'ResidentTab', label: 'Healthcare', icon: '🩺' },
-  { key: 'WellnessScreen', tab: 'ResidentTab', label: 'Wellness', icon: '🧘' },
-  { key: 'TempleDirectoryScreen', tab: 'ResidentTab', label: 'Temples', icon: '🛕' },
-  { key: 'AmenityBookingScreen', tab: 'CommunityTab', label: 'Clubhouse', icon: '🎯' },
-  { key: 'VisitorScreen', tab: 'CommunityTab', label: 'Visitors', icon: '🧑‍🤝‍🧑' },
+  { key: 'HomeServices', label: 'Cleaning', icon: '🧹', tint: '#E8EEFF' },
+  { key: 'Housekeeping', label: 'Housekeeping', icon: '🧺', tint: '#FFF0D6' },
+  { key: 'CookBooking', label: 'Book a Cook', icon: '👨‍🍳', tint: '#FCE4E8' },
+  { key: 'MealOrder', label: 'Meal Tiffin', icon: '🍱', tint: '#E4F6EC' },
+  { key: 'HealthcareScreen', label: 'Healthcare', icon: '🩺', tint: '#E6F4FB' },
+  { key: 'Wheelchair', label: 'Mobility Aid', icon: '🦽', tint: '#EDE7FF' },
+  { key: 'WellnessScreen', label: 'Wellness', icon: '🧘', tint: '#FFF0D6' },
+  { key: 'SpiritualScreen', label: 'Spiritual', icon: '🕉️', tint: '#FCE4E8' },
+  { key: 'TempleDirectoryScreen', label: 'Temples', icon: '🛕', tint: '#E8EEFF' },
+  { key: 'Darshan', label: 'Darshan', icon: '🚕', tint: '#E4F6EC' },
 ];
+
+function GridTile({ item, width, onPress }) {
+  return (
+    <TouchableOpacity activeOpacity={0.8} style={[styles.tile, { width }]} onPress={onPress}>
+      <View style={[styles.iconBadge, { backgroundColor: item.tint }]}>
+        <Text style={styles.tileIcon}>{item.icon}</Text>
+      </View>
+      <Text style={styles.tileLabel} numberOfLines={2}>{item.label}</Text>
+    </TouchableOpacity>
+  );
+}
 
 export default function HomeScreen({ navigation }) {
   const dispatch = useDispatch();
@@ -122,40 +145,23 @@ export default function HomeScreen({ navigation }) {
       </Card>
 
       <SectionHeader title="Quick Access" />
-      <FlatList
-        data={QUICK_TILES}
-        keyExtractor={i => i.key}
-        numColumns={3}
-        scrollEnabled={false}
-        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: spacing.sm }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.tile, { backgroundColor: item.color }]}
-            onPress={() => navigation.navigate(item.key)}
-          >
-            <Text style={styles.tileIcon}>{item.icon}</Text>
-            <Text style={styles.tileLabel}>{item.label}</Text>
-          </TouchableOpacity>
-        )}
-      />
+      <View style={styles.grid}>
+        {QUICK_TILES.map(item => (
+          <GridTile key={item.key} item={item} width={QUICK_W} onPress={() => navigation.navigate(item.key)} />
+        ))}
+      </View>
 
       <SectionHeader title="Resident Services" subtitle="Lifestyle, health, spiritual & community" />
-      <FlatList
-        data={SERVICE_TILES}
-        keyExtractor={i => i.key}
-        numColumns={3}
-        scrollEnabled={false}
-        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: spacing.sm }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.tile, { backgroundColor: palette.surface }]}
-            onPress={() => navigation.navigate(item.tab, { screen: item.key })}
-          >
-            <Text style={styles.tileIcon}>{item.icon}</Text>
-            <Text style={styles.tileLabel}>{item.label}</Text>
-          </TouchableOpacity>
-        )}
-      />
+      <View style={styles.grid}>
+        {SERVICE_TILES.map(item => (
+          <GridTile
+            key={item.key}
+            item={item}
+            width={SVC_W}
+            onPress={() => navigation.navigate('ResidentTab', { screen: item.key })}
+          />
+        ))}
+      </View>
 
       <TouchableOpacity
         style={styles.sos}
@@ -207,18 +213,29 @@ const styles = StyleSheet.create({
   },
   payBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: GRID_GAP,
+  },
   tile: {
-    width: '31.5%',
-    aspectRatio: 1,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: palette.divider,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  iconBadge: {
+    width: 54, height: 54,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.sm,
+    marginBottom: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
-  tileIcon: { fontSize: 28 },
-  tileLabel: { fontSize: 11, fontWeight: '600', color: palette.text, marginTop: 6, textAlign: 'center' },
+  tileIcon: { fontSize: 26 },
+  tileLabel: { fontSize: 11.5, fontWeight: '600', color: palette.text, textAlign: 'center', lineHeight: 15 },
 
   sos: {
     marginTop: spacing.lg,

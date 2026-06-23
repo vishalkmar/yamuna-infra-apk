@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ScreenContainer from '../../components/ScreenContainer';
@@ -43,10 +43,14 @@ export default function LoginScreen({ navigation }) {
       <View>
         <View style={styles.header}>
           <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>श्री</Text>
+            <Image
+              source={require('../../../logo.png')}
+              style={styles.logoImg}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={typography.h1}>Welcome to Yamuna Infra</Text>
-          <Text style={[typography.bodyMuted, { marginTop: 6 }]}>
+          <Text style={[typography.h1, styles.center]}>Welcome to Yamuna Infra</Text>
+          <Text style={[typography.bodyMuted, styles.center, { marginTop: 6 }]}>
             Log in with your email to access your account.
           </Text>
         </View>
@@ -75,14 +79,18 @@ export default function LoginScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  header: { marginTop: spacing.xl, marginBottom: spacing.xl },
+  header: { marginTop: spacing.xxl, marginBottom: spacing.xl, alignItems: 'center' },
+  center: { textAlign: 'center' },
   logoBadge: {
-    width: 64, height: 64, borderRadius: 16,
-    backgroundColor: palette.primary,
+    width: 96, height: 96, borderRadius: 24,
+    backgroundColor: '#fff',
     alignItems: 'center', justifyContent: 'center',
     marginBottom: spacing.lg,
+    borderWidth: 1, borderColor: palette.divider,
+    shadowColor: palette.primary, shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
-  logoText: { fontFamily: FONT, color: '#fff', fontSize: 24, fontWeight: '800' },
+  logoImg: { width: 72, height: 72 },
   form: { marginTop: spacing.md },
   hint: { fontFamily: FONT, marginTop: spacing.md, color: palette.textMuted, fontSize: 12, lineHeight: 18 },
 });

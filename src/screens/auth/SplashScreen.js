@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { palette, spacing, FONT } from '../../theme';
 
 // Pure presentational splash. RootNavigator shows this while booting, then
@@ -8,7 +8,11 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.logoWrap}>
-        <Text style={styles.logo}>श्री</Text>
+        <Image
+          source={require('../../../logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </View>
       <Text style={styles.title}>Yamuna Infra</Text>
       <Text style={styles.tagline}>Customer Experience</Text>
@@ -25,12 +29,14 @@ const styles = StyleSheet.create({
     backgroundColor: palette.primary,
   },
   logoWrap: {
-    width: 96, height: 96, borderRadius: 24,
+    width: 132, height: 132, borderRadius: 32,
     backgroundColor: '#fff',
     alignItems: 'center', justifyContent: 'center',
     marginBottom: spacing.lg,
+    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
   },
-  logo: { fontFamily: FONT, fontSize: 38, fontWeight: '800', color: palette.primary },
+  logo: { width: 104, height: 104 },
   title: { fontFamily: FONT, fontSize: 28, fontWeight: '800', color: '#fff', marginTop: spacing.sm },
   tagline: { fontFamily: FONT, fontSize: 14, color: '#DBE3FF', marginTop: 4 },
 });
