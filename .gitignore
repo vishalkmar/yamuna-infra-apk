@@ -33,6 +33,9 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
+# Upload-key passwords for the Play Store release build.
+android/keystore.properties
+!android/keystore.properties.example
 .kotlin/
 
 # node.js

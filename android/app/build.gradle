@@ -77,14 +77,27 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+    // `namespace` is the code package (MainActivity/MainApplication live here).
+    // `applicationId` is the Play Store identity and is permanent once published.
     namespace "com.infra"
     defaultConfig {
-        applicationId "com.infra"
+        applicationId "com.yamunainfra.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "0.3.0"
+        versionCode 4
+        versionName "1.0.0"
     }
+
+    // Release signing reads android/keystore.properties, which is gitignored so
+    // the upload key never lands in the repo. Without that file the release
+    // build fails loudly instead of silently shipping a debug-signed artifact
+    // (Play rejects debug-signed uploads).
+    def keystorePropsFile = rootProject.file("keystore.properties")
+    def keystoreProps = new Properties()
+    if (keystorePropsFile.exists()) {
+        keystoreProps.load(new FileInputStream(keystorePropsFile))
+    }
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -92,15 +105,26 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            if (!keystorePropsFile.exists()) {
+                throw new GradleException(
+                    "Missing android/keystore.properties — a release build must be signed with the " +
+                    "upload key. Copy keystore.properties.example, fill it in, and retry.")
+            }
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

@@ -41,7 +41,7 @@ The blueprint PDF (`RealEstate_App_Blueprint.pdf` in the user's Drive) defines
 | 25| New Project & Investment Opportunities| 3     | ✅ Done    |
 | 26| AI Concierge & My Vrindavan Companion | 3     | ✅ Done    |
 | 27| Resident Profile (details/prefs/family/KYC) | 4 | ✅ Done    |
-| 28| Configurable AI Concierge (RAG admin)  | 4   | 🔜 Planned |
+| 28| Configurable AI Concierge (RAG admin)  | 4   | ✅ Done    |
 | 29| Reminders 2.0 (any category + device alarms) | 4 | ✅ Done* |
 | 30| App Settings (language/privacy/access) | 4   | ✅ Done    |
 | 31| SOS Management (contacts + auto dispatch) | 4 | ✅ Done* |
@@ -77,11 +77,24 @@ system**. Target architecture (permanent):
 - Chat served via backend `/ai/chat` so the **LLM key never ships in the app**.
 - Falls back to the built-in rule-based replies when unconfigured.
 
-**INTERIM (shipped now):** the app calls NVIDIA NIM (OpenAI-compatible) DIRECTLY
-from `src/api/llm.js`, keyed by `ENV.LLM.apiKey` in `src/constants/env.js`
-(grounded by a static Vrindavan system prompt — no retrieval yet). This ships
-the key inside the build → demo-only, to be replaced by the backend RAG design
-above. The chat UI now lives in a **global floating 🤖 button** beside SOS
+**STATUS: the interim direct-to-NVIDIA path is GONE.** `src/api/llm.js` and the
+`ENV.LLM` block (which shipped the API key inside the build) were deleted.
+`companionApi.sendChat()` now posts to backend `/ai/chat`, which runs the full
+RAG pipeline (`AdminAiModel.answer` → knowledge chunks + `aiTools` live app data
++ admin instruction sources) and holds the key server-side. The rich Vrindavan
+persona that used to live in the app's `SYSTEM_PROMPT` moved to
+`AdminAiModel.answer`'s default `intro`.
+
+Provider notes: `meta/llama-3.3-70b-instruct` is still listed by NIM but no
+longer answers on this account — requests hang until timeout. Primary is now
+`mistralai/mistral-nemotron`, with `LLM_FALLBACK_MODELS` tried in order when a
+model errors, times out, or returns empty content (reasoning-style models can
+return `reasoning_content` and an empty `content`). All provider calls are
+time-boxed by `LLM_TIMEOUT_MS`; without that a retired model hung the resident's
+chat request forever. `GET /api/admin/ai/health` probes every model plus
+embeddings and Pinecone.
+
+The chat UI lives in a **global floating 🤖 button** beside SOS
 (`FloatingChatButton`), not inside the Companion screen.
 
 ### Module 29 — Reminders 2.0 ✅ Done* (*needs one APK rebuild)

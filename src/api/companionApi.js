@@ -1,7 +1,6 @@
 import api from './client';
 import { ENV } from '../constants/env';
 import { mockApi } from './mock';
-import { llmChat, llmEnabled } from './llm';
 
 export const companionApi = {
   listCheckins: async () => {
@@ -34,18 +33,10 @@ export const companionApi = {
     const { data } = await api.get('/ai/chat');
     return data.data;
   },
-  sendChat: async (message, history = []) => {
-    // Real LLM answers (interim: app calls NVIDIA directly). Falls back to the
-    // rule-based mock reply if the LLM is disabled or the call fails.
-    if (llmEnabled()) {
-      try {
-        const reply = await llmChat(message, history);
-        if (ENV.USE_MOCK_API) mockApi.recordAiChat(message, reply);
-        return { reply };
-      } catch (e) {
-        // fall through to mock / backend
-      }
-    }
+  // Chat goes through the backend, which owns the RAG pipeline (admin knowledge
+  // base + live app data) and the LLM key. The app never talks to the model
+  // provider directly — a shipped key can be extracted from the build.
+  sendChat: async message => {
     if (ENV.USE_MOCK_API) return mockApi.sendAiChat(message);
     const { data } = await api.post('/ai/chat', { message });
     return data.data;

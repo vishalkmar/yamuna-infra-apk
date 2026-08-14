@@ -5,7 +5,8 @@
 # Usage:  cd to this folder, then:  .\build-and-install.ps1
 
 $ErrorActionPreference = 'Stop'
-$proj = "C:\Users\DELL\Desktop\infra\inf2\infra\infra"
+# Resolve the project from this script's own location so the folder can move.
+$proj = $PSScriptRoot
 $adb  = "C:\Users\DELL\AppData\Local\Android\Sdk\platform-tools\adb.exe"
 $apk  = "$proj\android\app\build\outputs\apk\release\app-release.apk"
 
