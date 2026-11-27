@@ -53,7 +53,7 @@ export default function CartScreen({ navigation }) {
       return;
     }
     try {
-      const placed = await dispatch(placeFoodOrder({ items: cart, total })).unwrap();
+      const placed = await dispatch(placeFoodOrder({ items: cart, total, paymentOrderId: order?.orderId })).unwrap();
       showToast('success', 'Order placed', `${placed.code} · ${formatINR(placed.total)}. Preparing your food!`);
       navigation.goBack();
     } catch (e) {

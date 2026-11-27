@@ -12,7 +12,7 @@ import { palette, NEU } from '../../theme';
 const MENU = [
   { key: 'ProfileDetails', title: 'Profile Details', sub: 'View & update your info', art: ART.pmDetails },
   { key: 'Rewards', title: 'Rewards & Referrals', sub: 'Earn benefits & invite neighbors', art: ART.pmRewards },
-  { key: 'AICompanion', title: 'Reminders', sub: 'Alarms for medicine, payments, darshan', art: ART.pmAi },
+  { key: 'AICompanion', title: 'Set Reminder', sub: 'Set reminders that ring like an alarm', art: ART.pmAi },
   { key: 'NotificationsScreen', title: 'Notifications', sub: 'Manage alerts & updates', art: ART.pmNotify },
   { key: 'Settings', title: 'Settings', sub: 'App, privacy & preferences', art: ART.pmSettings },
   { key: 'help', title: 'Help & Support', sub: 'Get help, raise a request', art: ART.pmHelp, to: ['HomeTab', 'Support'] },

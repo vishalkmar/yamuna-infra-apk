@@ -18,10 +18,7 @@ const SERVICES = [
   { key: 'SpiritualScreen', label: 'Spiritual', art: ART.spiritual, cat: 'lifestyle' },
   { key: 'TempleDirectoryScreen', label: 'Temples', art: ART.temples, cat: 'lifestyle' },
   { key: 'Darshan', label: 'Darshan', art: ART.darshan, cat: 'lifestyle' },
-  { key: 'parcel', label: 'Parcel & Courier', art: ART.parcel, cat: 'home', to: ['HomeTab', 'Support'] },
-  { key: 'maintenance', label: 'Maintenance', art: ART.maintenance, cat: 'home', to: ['HomeTab', 'Support'] },
-  { key: 'community', label: 'Community', art: ART.community, cat: 'community', to: ['CommunityTab'] },
-  { key: 'events', label: 'Events', art: ART.events, cat: 'community', to: ['CommunityTab'] },
+  { key: 'Maintenance', label: 'Maintenance', art: ART.maintenance, cat: 'home' },
   { key: 'docket', label: 'Booking Docket', art: ART.docket, cat: 'home', to: ['HomeTab', 'BookingDocket'] },
   { key: 'support', label: 'Support', art: ART.support, cat: 'community', to: ['HomeTab', 'Support'] },
 ];

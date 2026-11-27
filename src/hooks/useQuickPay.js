@@ -21,12 +21,12 @@ export default function useQuickPay() {
   const [starting, setStarting] = useState(false);
   const done = useRef(null);
 
-  const start = async ({ purpose, amount, refId, remarks, items, onDone }) => {
+  const start = async ({ purpose, amount, refId, remarks, items, kind, onDone }) => {
     done.current = onDone;
     if (!(Number(amount) > 0)) { onDone?.(false); return false; }
     setStarting(true);
     try {
-      const ord = await paymentApi.checkout({ purpose, amount: Number(amount), refId, remarks, items });
+      const ord = await paymentApi.checkout({ purpose, amount: Number(amount), refId, remarks, items, kind });
       setOrder(ord);
       setActive(true);
       setTimeout(() => setOpen(true), 350);

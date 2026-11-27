@@ -57,6 +57,21 @@ export function openLink(link) {
     case 'support': return nav('HomeTab', 'Support');
     case 'reminders': return nav('ProfileTab', 'AICompanion');
     case 'notifications': return nav('HomeTab', 'NotificationsScreen');
+    case 'mybookings': return nav('HomeTab', 'MyBookings');
+    case 'transactions': return nav('HomeTab', 'Transactions');
+    case 'sos': return nav('HomeTab', 'SOSScreen');
+    case 'healthcare': return nav('ResidentTab', 'HealthcareScreen');
+    case 'cleaning': return nav('ResidentTab', 'HomeServices');
+    case 'cook': return nav('ResidentTab', 'CookBooking');
+    case 'housekeeping': case 'attendant': return nav('ResidentTab', 'Housekeeping');
+    case 'maintenance': return nav('ResidentTab', 'Maintenance');
+    case 'wellness': return nav('ResidentTab', 'WellnessScreen');
+    case 'mobility': return nav('ResidentTab', 'Wheelchair');
+    case 'darshan': return nav('ResidentTab', 'TempleDirectoryScreen');
+    case 'amenity': return nav('CommunityTab', 'AmenityBookingScreen');
+    case 'visitors': return nav('CommunityTab', 'VisitorScreen');
+    case 'rewards': return nav('ProfileTab', 'Rewards');
+    case 'settings': return nav('ProfileTab', 'Settings');
     default: return nav('HomeTab', 'NotificationsScreen');
   }
 }
@@ -151,18 +166,34 @@ function handleChat(msg) {
   showPhoneNotification({ id: `chat-${m.id}`, title: `💬 New message from ${m.adminName || 'Yamuna Infra Support'}`, body: preview, link: 'support' });
 }
 
+// Socket status for UI ("Live" vs "Connecting…").
+let live = false;
+const liveListeners = new Set();
+function setLive(v) { if (live !== v) { live = v; liveListeners.forEach(f => f(v)); } }
+export const isLive = () => live;
+export function onLiveStatus(fn) { liveListeners.add(fn); fn(live); return () => liveListeners.delete(fn); }
+// Reconnect now (e.g. a chat screen opened and the socket is down).
+export function ensureLive() { if (!stopped && token && (!ws || ws.readyState > 1)) { retry = 0; connect(); } }
+
 function connect() {
   if (stopped || !token) return;
-  try { ws?.close(); } catch (e) { /* noop */ }
-  ws = new WebSocket(wsUrl());
-  ws.onopen = () => {
+  clearTimeout(timer); // a manual reconnect cancels any pending auto-reconnect
+  // Retire the old socket completely: its late close event must not touch the
+  // new connection (that race used to drop the new socket and lose messages).
+  const old = ws;
+  if (old) { old.onopen = old.onmessage = old.onclose = old.onerror = null; try { old.close(); } catch (e) { /* noop */ } }
+  const sock = new WebSocket(wsUrl());
+  ws = sock;
+  sock.onopen = () => {
+    if (ws !== sock) return;
     retry = 0;
+    setLive(true);
     refreshUnread();
     refreshChatUnread();
     clearInterval(pingTimer);
-    pingTimer = setInterval(() => { try { ws?.send('ping'); } catch (e) { /* noop */ } }, 30000);
+    pingTimer = setInterval(() => { try { if (ws === sock) sock.send('ping'); } catch (e) { /* noop */ } }, 30000);
   };
-  ws.onmessage = e => {
+  sock.onmessage = e => {
     let msg; try { msg = JSON.parse(e.data); } catch (_) { return; }
     if (!msg.data) return;
     if (msg.type === 'chat' || msg.type === 'chat_read' || msg.type === 'chat_delivered') { handleChat(msg); return; }
@@ -175,14 +206,17 @@ function connect() {
     }
     showPhoneNotification(n);
   };
-  ws.onclose = () => {
+  sock.onclose = () => {
+    if (ws !== sock) return;
+    ws = null;
+    setLive(false);
     clearInterval(pingTimer);
     if (stopped) return;
-    retry = Math.min(retry + 1, 6);
+    retry = Math.min(retry + 1, 4);
     clearTimeout(timer);
-    timer = setTimeout(connect, 1000 * 2 ** retry); // 2s … 64s
+    timer = setTimeout(connect, Math.min(15000, 1000 * 2 ** retry)); // 2s … 15s
   };
-  ws.onerror = () => { /* onclose follows */ };
+  sock.onerror = () => { /* onclose follows */ };
 }
 
 let appStateSub = null;
@@ -211,8 +245,10 @@ export function stopLive() {
   token = null;
   clearTimeout(timer);
   clearInterval(pingTimer);
-  try { ws?.close(); } catch (e) { /* noop */ }
+  const old = ws;
   ws = null;
+  if (old) { old.onopen = old.onmessage = old.onclose = old.onerror = null; try { old.close(); } catch (e) { /* noop */ } }
+  setLive(false);
   appStateSub?.remove?.();
   setUnread(0);
   cancelDueReminders();

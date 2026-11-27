@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import useKeyboardPadding from '../../hooks/useKeyboardPadding';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,24 +9,45 @@ import Feather from 'react-native-vector-icons/Feather';
 import { palette, spacing, FONT, NEU } from '../../theme';
 import { Neu } from '../../components/neu';
 import { showToast } from '../../utils/toastConfig';
-import { setFullScreen } from '../../services/liveNotifications';
+import { setFullScreen, openLink } from '../../services/liveNotifications';
+import ChatCards from '../../components/ChatCards';
+import AppointmentBookingSheet from '../../components/AppointmentBookingSheet';
+import ServiceBookingSheet from '../../components/ServiceBookingSheet';
+import WellnessBookingSheet from '../../components/WellnessBookingSheet';
+import MobilityBookingSheet from '../../components/MobilityBookingSheet';
+import { downloadFile } from '../../services/downloader';
+import { myApi } from '../../api/myApi';
 import { loadChat, sendChat, pushUserMessage } from '../../store/slices/companionSlice';
 
 // Vrindavan Assistant — the AI chatbot as a full-screen tab (between
 // Community and Profile). The tab bar hides while it is open so the
 // composer has the whole bottom edge.
 const SUGGESTIONS = [
-  'Banke Bihari darshan timings today?',
   'When is my next installment due?',
-  'Book a cook for tomorrow',
-  'Nearest temples to my home',
+  'Show my property overview',
+  'How many installments do I have?',
+  'Give me my booking docket',
+  'I want to book a doctor',
+  'How do I set a reminder?',
+  'Banke Bihari darshan timings today?',
 ];
 
 export default function AssistantScreen({ navigation }) {
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
+  const kb = useKeyboardPadding();
   const { messages, chatBusy } = useSelector(s => s.companion);
   const [draft, setDraft] = useState('');
+  const token = useSelector(s => s.auth.token);
+  const [booking, setBooking] = useState(null); // { type, data, category?, categoryLabel? }
+
+  // Card buttons: open a screen, download a PDF, or book right here in the chat.
+  const onAction = a => {
+    if (a.book) { setBooking(a.book); return; }
+    if (a.download) { downloadFile(myApi.receiptLink(a.download, token), a.filename || a.label); return; }
+    if (a.link) openLink(a.link);
+  };
+  const booked = () => { setBooking(null); showToast('success', 'Booked!', 'You can see it in My Bookings.'); };
   const scrollRef = useRef(null);
 
   useFocusEffect(useCallback(() => {
@@ -46,7 +68,7 @@ export default function AssistantScreen({ navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView style={[styles.wrap, { paddingTop: insets.top }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View ref={kb.ref} collapsable={false} style={[styles.wrap, { paddingTop: insets.top, paddingBottom: kb.pad }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate('HomeTab')} hitSlop={10} style={styles.back}>
           <Feather name="arrow-left" size={22} color={palette.navy} />
@@ -72,10 +94,13 @@ export default function AssistantScreen({ navigation }) {
             </View>
           </View>
         ) : messages.map(m => (
-          <View key={m.id} style={[styles.row, m.role === 'user' ? styles.right : styles.left]}>
-            <View style={[styles.bubble, m.role === 'user' ? styles.user : styles.ai]}>
-              <Text style={[styles.text, m.role === 'user' && { color: '#fff' }]}>{m.content}</Text>
+          <View key={m.id}>
+            <View style={[styles.row, m.role === 'user' ? styles.right : styles.left]}>
+              <View style={[styles.bubble, m.role === 'user' ? styles.user : styles.ai]}>
+                <Text style={[styles.text, m.role === 'user' && { color: '#fff' }]}>{m.content}</Text>
+              </View>
             </View>
+            {m.role === 'assistant' && m.cards?.length ? <ChatCards cards={m.cards} onAction={onAction} /> : null}
           </View>
         ))}
         {chatBusy ? (
@@ -83,7 +108,7 @@ export default function AssistantScreen({ navigation }) {
         ) : null}
       </ScrollView>
 
-      <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 8) + 6 }]}>
+      <View style={[styles.composer, { paddingBottom: kb.keyboardOpen ? 8 : Math.max(insets.bottom, 8) + 6 }]}>
         <TextInput
           style={styles.input}
           value={draft}
@@ -96,7 +121,11 @@ export default function AssistantScreen({ navigation }) {
           <Feather name="send" size={19} color="#fff" />
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+      <AppointmentBookingSheet visible={booking?.type === 'doctor'} doctor={booking?.type === 'doctor' ? booking.data : null} onClose={() => setBooking(null)} onBooked={booked} />
+      <ServiceBookingSheet visible={booking?.type === 'service'} category={booking?.category} categoryLabel={booking?.categoryLabel} provider={booking?.type === 'service' ? booking.data : null} onClose={() => setBooking(null)} onBooked={booked} />
+      <WellnessBookingSheet visible={booking?.type === 'wellness'} therapy={booking?.type === 'wellness' ? booking.data : null} onClose={() => setBooking(null)} onBooked={booked} />
+      <MobilityBookingSheet visible={booking?.type === 'mobility'} aid={booking?.type === 'mobility' ? booking.data : null} onClose={() => setBooking(null)} onBooked={booked} />
+    </View>
   );
 }
 

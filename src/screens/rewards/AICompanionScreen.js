@@ -4,50 +4,37 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
-import WellnessCheckinSheet from '../../components/WellnessCheckinSheet';
 import ReminderSheet from '../../components/ReminderSheet';
 import { palette, spacing, typography } from '../../theme';
-import { formatDate } from '../../utils/format';
 import { categoryMeta, to12hLabel, DAY_SHORT, repeatSummary } from '../../utils/reminders';
 import { companionApi } from '../../api/companionApi';
 import { showToast } from '../../utils/toastConfig';
-import { rescheduleAll, cancelReminderAlarm, exactAlarmAllowed, openExactAlarmSettings, testAlarm } from '../../services/notifications';
-import {
-  loadReminders, loadCheckins, loadDailyContent, removeReminder,
-} from '../../store/slices/companionSlice';
+import { rescheduleAll, exactAlarmAllowed, openExactAlarmSettings, testAlarm } from '../../services/notifications';
+import { loadReminders } from '../../store/slices/companionSlice';
 
-const MOOD_ICON = ['😟', '😕', '😐', '🙂', '😄'];
-
-export default function AICompanionScreen() {
+// Set Reminder — the resident's alarm clock: set reminders and see / switch
+// on-off the ones already set. (Route name stays "AICompanion".)
+export default function SetReminderScreen() {
   const dispatch = useDispatch();
-  const { reminders, checkins, dailyContent } = useSelector(s => s.companion);
-  const [checkinOpen, setCheckinOpen] = useState(false);
+  const { reminders } = useSelector(s => s.companion);
   const [reminderOpen, setReminderOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [localOff, setLocalOff] = useState({});
+  const [exactOk, setExactOk] = useState(true);
 
-  const reload = useCallback(() => {
-    dispatch(loadReminders());
-    dispatch(loadCheckins());
-    dispatch(loadDailyContent());
-  }, [dispatch]);
-
+  const reload = useCallback(() => { dispatch(loadReminders()); }, [dispatch]);
   useEffect(() => { reload(); }, [reload]);
 
-  // Keep device alarms in sync with the reminder list (add / remove / load).
+  // Keep device alarms in sync with the reminder list (add / edit / delete / on-off).
   useEffect(() => { rescheduleAll(reminders); }, [reminders]);
+  useEffect(() => { exactAlarmAllowed().then(setExactOk); }, [reminders]);
 
-  const onRemove = id => { dispatch(removeReminder(id)); cancelReminderAlarm(id); };
-  // On/off switch: alarms for an "off" reminder are cancelled but it stays in the list.
+  // On/off switch: an "off" reminder keeps its settings but its alarms are cancelled.
   const toggle = async (r, v) => {
     setLocalOff(o => ({ ...o, [r.id]: !v }));
     try { await companionApi.toggleReminder(r.id, v); dispatch(loadReminders()); showToast('success', v ? 'Reminder on ⏰' : 'Reminder off', r.title); }
     catch (e) { setLocalOff(o => ({ ...o, [r.id]: v })); showToast('error', 'Could not change', String(e)); }
   };
-  const [exactOk, setExactOk] = useState(true);
-  useEffect(() => { exactAlarmAllowed().then(setExactOk); }, [reminders]);
-
-  const lastCheckin = checkins[0];
 
   return (
     <ScreenContainer refreshing={false} onRefresh={reload}>
@@ -59,13 +46,17 @@ export default function AICompanionScreen() {
           </Card>
         </TouchableOpacity>
       ) : null}
-      {/* Reminders (any category) */}
+
+      <TouchableOpacity onPress={() => setReminderOpen(true)} activeOpacity={0.85} style={styles.addBtn}>
+        <Text style={styles.addText}>＋ Set reminder</Text>
+      </TouchableOpacity>
+
       <View style={styles.rowBetween}>
         <Text style={typography.h3}>Your reminders</Text>
-        <TouchableOpacity onPress={() => setReminderOpen(true)}><Text style={styles.action}>＋ Add</Text></TouchableOpacity>
+        {reminders.length ? <Text style={typography.caption}>{reminders.length}</Text> : null}
       </View>
       {reminders.length === 0 ? (
-        <Card style={styles.card}><Text style={typography.bodyMuted}>No reminders yet. Tap ＋ Add — set one or more times, choose daily / weekdays / custom days, and it rings like an alarm even when the app is closed.</Text></Card>
+        <Card style={styles.card}><Text style={typography.bodyMuted}>No reminders yet. Tap ＋ Set reminder — set one or more times, choose daily / weekdays / custom days, and it rings like an alarm even when the app is closed.</Text></Card>
       ) : reminders.map(r => {
         const on = localOff[r.id] != null ? !localOff[r.id] : r.enabled !== false;
         const times = r.times && r.times.length ? r.times : [r.timeLabel];
@@ -101,56 +92,17 @@ export default function AICompanionScreen() {
         <Text style={styles.test}>🔔 Test alarm (rings in 5 seconds)</Text>
       </TouchableOpacity>
 
-      {/* Daily content */}
-      {dailyContent ? (
-        <Card style={styles.hero}>
-          <Text style={styles.heroLabel}>🌅 TODAY</Text>
-          <Text style={styles.quote}>“{dailyContent.quote}”</Text>
-          <Text style={styles.heroSub}>🎵 {dailyContent.bhajan}  ·  🛕 {dailyContent.templeSuggestion}</Text>
-        </Card>
-      ) : null}
-
-      {/* Chat moved to the floating 🤖 button (bottom-right, beside SOS) */}
-      <Card style={styles.chatHint}>
-        <Text style={styles.chatHintText}>🤖 Open the Assistant tab (bottom bar) anytime to chat about darshan, payments or services.</Text>
-      </Card>
-
-      {/* Wellness check-in */}
-      <View style={styles.rowBetween}>
-        <Text style={typography.h3}>Daily wellness</Text>
-        <TouchableOpacity onPress={() => setCheckinOpen(true)}><Text style={styles.action}>Check in</Text></TouchableOpacity>
-      </View>
-      <Card style={styles.card}>
-        {lastCheckin ? (
-          <Text style={typography.body}>
-            {MOOD_ICON[lastCheckin.moodScore - 1] || '🙂'} Last check-in {formatDate(lastCheckin.createdAt)}
-            {lastCheckin.painLevel ? ` · pain ${lastCheckin.painLevel}/10` : ''}
-          </Text>
-        ) : (
-          <Text style={typography.bodyMuted}>No check-in yet today. Tap “Check in” to record your mood.</Text>
-        )}
-      </Card>
-
-      <WellnessCheckinSheet visible={checkinOpen} onClose={() => setCheckinOpen(false)} onDone={() => dispatch(loadCheckins())} />
       <ReminderSheet visible={reminderOpen || !!editing} editing={editing} onClose={() => { setReminderOpen(false); setEditing(null); }} onDone={() => { setLocalOff({}); dispatch(loadReminders()); }} />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { backgroundColor: palette.primary, borderColor: palette.primary, marginBottom: spacing.md },
-  heroLabel: { color: '#A8B2D4', fontSize: 11, fontWeight: '700', letterSpacing: 1 },
-  quote: { color: '#fff', fontSize: 15, fontWeight: '600', marginTop: 6, lineHeight: 21 },
-  heroSub: { color: '#DBE3FF', fontSize: 12, marginTop: spacing.sm },
-
-  chatHint: { backgroundColor: palette.surfaceAlt, marginBottom: spacing.sm },
-  chatHintText: { fontSize: 13, color: palette.text, lineHeight: 19 },
-
+  addBtn: { backgroundColor: palette.primary, borderRadius: 18, paddingVertical: 16, alignItems: 'center', marginBottom: spacing.md },
+  addText: { color: '#fff', fontSize: 16, fontWeight: '800' },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm, marginBottom: spacing.sm },
-  action: { color: palette.primary, fontWeight: '700', fontSize: 13 },
   card: { marginBottom: spacing.sm },
   name: { fontSize: 15, fontWeight: '700', color: palette.text },
-  remove: { color: palette.error, fontWeight: '600', fontSize: 12 },
   alarmRow: { flexDirection: 'row', alignItems: 'center' },
   alarmTime: { fontSize: 26, fontWeight: '800', color: palette.navy, marginBottom: 2 },
   dayRow: { flexDirection: 'row', gap: 6, marginTop: 6 },

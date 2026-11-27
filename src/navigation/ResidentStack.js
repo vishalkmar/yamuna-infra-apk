@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { neuScreenOptions } from './neuStack';
 import ResidentHome from '../screens/services/ServicesHomeScreen';
 import HomeCleaningScreen from '../screens/services/HomeCleaningScreen';
+import MaintenanceScreen from '../screens/services/MaintenanceScreen';
 import HousekeepingScreen from '../screens/services/HousekeepingScreen';
 import CookBookingScreen from '../screens/services/CookBookingScreen';
 import ProviderOfferingsScreen from '../screens/services/ProviderOfferingsScreen';
@@ -25,6 +26,7 @@ export default function ResidentStack() {
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen name="ResidentHome" component={ResidentHome} options={{ headerShown: false }} />
       <Stack.Screen name="HomeServices" component={HomeCleaningScreen} options={{ title: 'Home Cleaning' }} />
+      <Stack.Screen name="Maintenance" component={MaintenanceScreen} options={{ title: 'Maintenance & Repairs' }} />
       <Stack.Screen name="Housekeeping" component={HousekeepingScreen} options={{ title: 'Housekeeping' }} />
       <Stack.Screen name="CookBooking" component={CookBookingScreen} options={{ title: 'Book a Cook' }} />
       <Stack.Screen name="MealOrder" component={MealOrderScreen} options={{ title: 'Meal Ordering' }} />

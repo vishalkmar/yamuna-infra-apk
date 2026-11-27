@@ -93,6 +93,7 @@ export default function ServiceBookingSheet({ visible, category, categoryLabel, 
         setPaying(true);
         const ord = await paymentApi.checkout({
           purpose: 'service',
+          kind: 'service',
           refId: res.id,
           amount,
           remarks: `${categoryLabel}${offering ? ' – ' + offering.name : ''}`,

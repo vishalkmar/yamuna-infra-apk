@@ -79,7 +79,7 @@ export default function WellnessBookingSheet({ visible, therapy, onClose, onBook
       );
       const finish = () => { onBooked?.(); onClose(); };
       if (Number(therapy.price) > 0) {
-        await pay.start({ purpose: 'service', amount: Number(therapy.price), refId: res.id, remarks: `Wellness · ${therapy.name}`, onDone: finish });
+        await pay.start({ purpose: 'service', kind: 'wellness', amount: Number(therapy.price), refId: res.id, remarks: `Wellness · ${therapy.name}`, onDone: finish });
       } else finish();
     } catch (e) {
       showToast('error', 'Could not book', String(e));

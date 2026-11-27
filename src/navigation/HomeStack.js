@@ -15,6 +15,8 @@ import SnagScreen from '../screens/snag/SnagScreen';
 import MoveInScreen from '../screens/movein/MoveInScreen';
 import SOSScreen from '../screens/sos/SOSScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
+import MyBookingsScreen from '../screens/bookings/MyBookingsScreen';
+import TransactionsScreen from '../screens/bookings/TransactionsScreen';
 import { palette } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -37,6 +39,8 @@ export default function HomeStack() {
       <Stack.Screen name="PossessionDashboard" component={PossessionDashboardScreen} options={{ title: 'Possession' }} />
       <Stack.Screen name="SnagReport" component={SnagScreen} options={{ title: 'Home Inspection & Snags' }} />
       <Stack.Screen name="MoveIn" component={MoveInScreen} options={{ title: 'Move-In Assistance' }} />
+      <Stack.Screen name="MyBookings" component={MyBookingsScreen} options={{ title: 'My Bookings' }} />
+      <Stack.Screen name="Transactions" component={TransactionsScreen} options={{ title: 'Transactions' }} />
       <Stack.Screen name="NotificationsScreen" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Stack.Screen name="SOSScreen" component={SOSScreen} options={{ title: 'Emergency SOS' }} />
     </Stack.Navigator>

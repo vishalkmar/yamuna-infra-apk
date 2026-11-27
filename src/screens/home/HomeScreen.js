@@ -15,8 +15,10 @@ const W = Dimensions.get('window').width;
 const SCALE = Math.min(1, Math.max(0.8, W / 400));
 const ms = n => Math.round(n * SCALE);
 const PAD = 18;
-const QA_GAP = 8;
-const QA = Math.floor((W - PAD * 2 - QA_GAP * 5) / 6);
+// Quick access: 8 tiles in two rows of 4.
+const QA_COLS = 4;
+const QA_GAP = 18;
+const QA = Math.min(72, Math.floor((W - PAD * 2 - QA_GAP * (QA_COLS - 1)) / QA_COLS));
 const SVC_COLS = W < 340 ? 3 : 4;
 const SVC_GAP = 14;
 const SVC_W = Math.floor((W - PAD * 2 - SVC_GAP * (SVC_COLS - 1)) / SVC_COLS);
@@ -28,6 +30,8 @@ const QUICK = [
   { key: 'SiteVisit', label: 'Site\nOverview', art: ART.qaSite },
   { key: 'Support', label: 'Support', art: ART.qaSupport },
   { key: 'ProfileTab', label: 'Profile', art: ART.qaProfile },
+  { key: 'MyBookings', label: 'My Bookings', art: ART.events },
+  { key: 'Transactions', label: 'Transactions', art: ART.wallet },
 ];
 
 const SERVICES = [
@@ -139,7 +143,7 @@ export default function HomeScreen({ navigation }) {
       <GoldHeading title="Quick Access" />
       <View style={styles.qaRow}>
         {QUICK.map(q => (
-          <TouchableOpacity key={q.key} activeOpacity={0.8} style={{ width: QA, alignItems: 'center', overflow: 'visible' }} onPress={() => navigation.navigate(q.key)}>
+          <TouchableOpacity key={q.key} activeOpacity={0.8} style={{ width: (W - PAD * 2 - QA_GAP * (QA_COLS - 1)) / QA_COLS, alignItems: 'center', overflow: 'visible' }} onPress={() => navigation.navigate(q.key)}>
             <IconTile source={q.art} size={QA} radius={Math.round(QA * 0.3)} imageScale={0.7} />
             <Text style={styles.qaLabel} numberOfLines={2}>{q.label}</Text>
           </TouchableOpacity>
@@ -198,8 +202,8 @@ const styles = StyleSheet.create({
   payBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: 999, paddingHorizontal: ms(16), paddingVertical: ms(11), marginLeft: 8, boxShadow: NEU.primary },
   payText: { fontFamily: FONT, color: '#fff', fontWeight: '700', fontSize: ms(14.5) },
 
-  qaRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  qaLabel: { fontFamily: FONT, fontSize: ms(11), fontWeight: '600', color: palette.navy, textAlign: 'center', marginTop: 8, width: QA + QA_GAP, marginHorizontal: -QA_GAP / 2 },
+  qaRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
+  qaLabel: { fontFamily: FONT, fontSize: ms(11.5), fontWeight: '600', color: palette.navy, textAlign: 'center', marginTop: 8, alignSelf: 'stretch' },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: SVC_GAP },
   svcLabel: { fontFamily: FONT, fontSize: ms(13), fontWeight: '600', color: palette.navy, textAlign: 'center', marginTop: 8 },

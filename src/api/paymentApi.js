@@ -23,6 +23,12 @@ export const paymentApi = {
     return data.data;
   },
 
+  // Online payment attempts for this property's installments (paid / pending / failed).
+  getTransactions: async propertyId => {
+    const { data } = await api.get('/payment-plan/property/' + propertyId + '/transactions', { timeout: 45000 });
+    return data.data;
+  },
+
   getLedger: async propertyId => {
     const { data } = await api.get(`/payment-plan/property/${propertyId}/ledger`);
     return data.data;
@@ -42,8 +48,8 @@ export const paymentApi = {
   // One-off payment for a food order / cab ride / home service (Cashfree).
   // purpose: 'food' | 'ride' | 'service'. Rides are priced server-side.
   // items (optional): [{ name, qty, price, amount }] — listed on the emailed receipt.
-  checkout: async ({ purpose, amount, refId, remarks, items }) => {
-    const { data } = await api.post('/payment/quick/initiate', { purpose, amount, refId: refId ?? null, remarks: remarks || '', ...(items && items.length ? { items } : {}) });
+  checkout: async ({ purpose, amount, refId, remarks, items, kind }) => {
+    const { data } = await api.post('/payment/quick/initiate', { purpose, amount, refId: refId ?? null, remarks: remarks || '', ...(items && items.length ? { items } : {}), ...(kind ? { kind } : {}) });
     return data.data;
   },
 

@@ -71,7 +71,7 @@ export default function AppointmentBookingSheet({ visible, doctor, onClose, onBo
       showToast('success', 'Appointment confirmed', `With ${doctor.name} on ${data.date} at ${data.timeSlot}. ${res.appointmentCode}`);
       const finish = () => { onBooked?.(); onClose(); };
       if (Number(doctor.fee) > 0) {
-        await pay.start({ purpose: 'service', amount: Number(doctor.fee), refId: res.id, remarks: `Consultation ${res.appointmentCode || ''} · ${doctor.name}`, onDone: finish });
+        await pay.start({ purpose: 'service', kind: 'appointment', amount: Number(doctor.fee), refId: res.id, remarks: `Consultation ${res.appointmentCode || ''} · ${doctor.name}`, onDone: finish });
       } else finish();
     } catch (e) {
       showToast('error', 'Could not book', String(e));

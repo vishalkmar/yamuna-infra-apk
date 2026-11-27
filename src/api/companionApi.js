@@ -3,16 +3,6 @@ import { ENV } from '../constants/env';
 import { mockApi } from './mock';
 
 export const companionApi = {
-  listCheckins: async () => {
-    if (ENV.USE_MOCK_API) return mockApi.getCheckins();
-    const { data } = await api.get('/companion/checkins');
-    return data.data;
-  },
-  addCheckin: async payload => {
-    if (ENV.USE_MOCK_API) return mockApi.addCheckin(payload);
-    const { data } = await api.post('/companion/checkin', payload);
-    return data.data;
-  },
   listReminders: async () => {
     if (ENV.USE_MOCK_API) return mockApi.getReminders();
     const { data } = await api.get('/companion/reminders');
@@ -49,11 +39,6 @@ export const companionApi = {
     // The backend may fall through several free-tier models (and Render may be
     // waking from sleep), so give the concierge longer than ordinary calls.
     const { data } = await api.post('/ai/chat', { message }, { timeout: 45000 });
-    return data.data;
-  },
-  dailyContent: async () => {
-    if (ENV.USE_MOCK_API) return mockApi.getDailyContent();
-    const { data } = await api.get('/spiritual/daily-content');
     return data.data;
   },
 };

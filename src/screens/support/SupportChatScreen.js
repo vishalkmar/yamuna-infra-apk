@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform,
+  View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image,
   ActivityIndicator, NativeModules, Linking,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
@@ -11,8 +11,9 @@ import api from '../../api/client';
 import { palette, FONT } from '../../theme';
 import MediaViewer from '../../components/MediaViewer';
 import { downloadFile } from '../../services/downloader';
-import { onChat, setChatOpen } from '../../services/liveNotifications';
+import { onChat, setChatOpen, onLiveStatus, isLive, ensureLive } from '../../services/liveNotifications';
 import { showToast } from '../../utils/toastConfig';
+import useKeyboardPadding from '../../hooks/useKeyboardPadding';
 
 // WhatsApp-style support chat with the Yamuna Infra office. Real-time over
 // the app socket; ticks: ✓ sent · ✓✓ delivered · blue ✓✓ read.
@@ -62,6 +63,7 @@ function Attachment({ a, onImage }) {
 
 export default function SupportChatScreen() {
   const insets = useSafeAreaInsets();
+  const kb = useKeyboardPadding();
   const [msgs, setMsgs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
@@ -69,18 +71,28 @@ export default function SupportChatScreen() {
   const [viewer, setViewer] = useState(null);
   const list = useRef(null);
 
+  const [live, setLiveState] = useState(isLive());
+  useEffect(() => onLiveStatus(setLiveState), []);
+
+  // Server copy is the truth; keep only our still-sending bubbles on top of it.
   const load = useCallback(async () => {
     try {
       const { data } = await api.get('/support/chat');
-      setMsgs(data.data || []);
-      api.post('/support/chat/read').catch(() => {});
+      const server = data.data || [];
+      setMsgs(prev => [...server, ...prev.filter(m => m.tempId && !server.some(s => s.body === m.body && s.sender === 'user' && !m.failed))]);
+      if (server.some(m => m.sender === 'admin' && m.status !== 'read')) api.post('/support/chat/read').catch(() => {});
     } catch (e) { /* offline */ } finally { setLoading(false); }
   }, []);
 
+  // Live over the socket; a light sync every few seconds as a safety net
+  // (every 4s while the socket is down, every 15s while it is up).
   useFocusEffect(useCallback(() => {
     setChatOpen(true);
+    ensureLive();
     load();
-    return () => setChatOpen(false);
+    let n = 0;
+    const t = setInterval(() => { n += 1; if (!isLive() || n % 4 === 0) load(); if (!isLive()) ensureLive(); }, 4000);
+    return () => { clearInterval(t); setChatOpen(false); };
   }, [load]));
 
   // Live: new messages, delivered / read receipts.
@@ -126,7 +138,7 @@ export default function SupportChatScreen() {
         return without.some(m => m.id === data.data.id) ? without : [...without, data.data];
       });
     } catch (e) {
-      setMsgs(prev => prev.map(m => (m.id === tempId ? { ...m, status: 'failed' } : m)));
+      setMsgs(prev => prev.map(m => (m.id === tempId ? { ...m, status: 'failed', failed: true } : m)));
       showToast('error', 'Not sent', e?.response?.data?.message || 'Check your internet and try again.');
     }
   };
@@ -169,10 +181,12 @@ export default function SupportChatScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.wrap} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+    <View ref={kb.ref} collapsable={false} style={[styles.wrap, { paddingBottom: kb.pad }]}>
       <View style={styles.banner}>
         <Feather name="headphones" size={16} color={palette.primary} />
         <Text style={styles.bannerText}>Chat with the Yamuna Infra office · replies here & as a notification</Text>
+        <View style={[styles.liveDot, { backgroundColor: live ? '#16A34A' : '#F59E0B' }]} />
+        <Text style={[styles.liveText, { color: live ? '#16A34A' : '#B45309' }]}>{live ? 'Live' : 'Connecting…'}</Text>
       </View>
       {loading ? <ActivityIndicator style={{ marginTop: 40 }} color={palette.primary} /> : (
         <FlatList
@@ -203,7 +217,7 @@ export default function SupportChatScreen() {
         </View>
       ) : null}
 
-      <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 8) + 4 }]}>
+      <View style={[styles.composer, { paddingBottom: kb.keyboardOpen ? 8 : Math.max(insets.bottom, 8) + 4 }]}>
         <TouchableOpacity onPress={pick} style={styles.iconBtn} hitSlop={6}><Feather name="paperclip" size={21} color="#64748B" /></TouchableOpacity>
         <TextInput
           value={text}
@@ -218,7 +232,7 @@ export default function SupportChatScreen() {
         </TouchableOpacity>
       </View>
       <MediaViewer visible={!!viewer} items={viewer?.items || []} index={viewer?.index || 0} onClose={() => setViewer(null)} />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -226,6 +240,8 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: WALL },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F6F8FC', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
   bannerText: { fontSize: 12, color: '#475569', flex: 1 },
+  liveDot: { width: 8, height: 8, borderRadius: 4 },
+  liveText: { fontSize: 11, fontWeight: '800' },
   dayWrap: { alignItems: 'center', marginVertical: 8 },
   day: { fontSize: 11.5, color: '#475569', backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, overflow: 'hidden', fontWeight: '600' },
   row: { flexDirection: 'row', marginVertical: 2 },

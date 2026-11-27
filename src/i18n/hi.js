@@ -332,7 +332,7 @@ export default {
   'No properties on your account yet.': 'आपके खाते में अभी कोई संपत्ति नहीं।',
   'No property is linked to your account yet. Please contact the office.': 'आपके खाते से अभी कोई संपत्ति नहीं जुड़ी। कृपया ऑफिस से संपर्क करें।',
   'No property linked yet': 'अभी कोई संपत्ति नहीं जुड़ी', 'No property yet': 'अभी कोई संपत्ति नहीं',
-  'No reminders yet. Tap ＋ Add — set one or more times, choose daily / weekdays / custom days, and it rings like an alarm even when the app is closed.': 'अभी कोई रिमाइंडर नहीं। ＋ जोड़ें दबाएँ — एक या अधिक समय रखें, रोज़ / सोम–शुक्र / चुने दिन चुनें; ऐप बंद होने पर भी अलार्म की तरह बजेगा।',
+  'No reminders yet. Tap ＋ Set reminder — set one or more times, choose daily / weekdays / custom days, and it rings like an alarm even when the app is closed.': 'अभी कोई रिमाइंडर नहीं। ＋ रिमाइंडर लगाएँ दबाएँ — एक या अधिक समय रखें, रोज़ / सोम–शुक्र / चुने दिन चुनें; ऐप बंद होने पर भी अलार्म की तरह बजेगा।',
   'No rides yet.': 'अभी कोई सवारी नहीं।', 'No schedule': 'कोई शेड्यूल नहीं', 'No service matches “': 'कोई सेवा नहीं मिली “',
   'No shifting booked yet. Book your packers & movers above.': 'अभी कोई शिफ्टिंग बुक नहीं। ऊपर पैकर्स और मूवर्स बुक करें।',
   'No slots (maintenance or fully booked). Try another date.': 'कोई समय खाली नहीं (रखरखाव या पूरी बुकिंग)। दूसरी तारीख चुनें।',
@@ -493,7 +493,8 @@ export default {
   // ---- extra UI text (tabs, new screens, common words) ----
   'Assistant': 'असिस्टेंट', 'Vrindavan Assistant': 'वृंदावन असिस्टेंट', 'Ask anything…': 'कुछ भी पूछें…',
   'Clear chat': 'चैट साफ़ करें', 'Today': 'आज', 'Yesterday': 'कल', 'Tomorrow': 'कल', 'Every day': 'हर दिन', 'Sat & Sun': 'शनि और रवि',
-  'Set reminder': 'रिमाइंडर लगाएँ', 'Save changes': 'बदलाव सेव करें', 'Saving…': 'सेव हो रहा है…', 'Times': 'समय', 'Note': 'नोट',
+  'Set reminder': 'रिमाइंडर लगाएँ', 'Set Reminder': 'रिमाइंडर लगाएँ', '＋ Set reminder': '＋ रिमाइंडर लगाएँ',
+  'Set reminders that ring like an alarm': 'अलार्म की तरह बजने वाले रिमाइंडर', 'Save changes': 'बदलाव सेव करें', 'Saving…': 'सेव हो रहा है…', 'Times': 'समय', 'Note': 'नोट',
   'Download PDF': 'PDF डाउनलोड करें', 'Downloading…': 'डाउनलोड हो रहा है…', 'Downloaded ✓': 'डाउनलोड हो गया ✓', 'Download failed': 'डाउनलोड नहीं हुआ',
   'Permission needed': 'अनुमति चाहिए', 'Not sent': 'नहीं भेजा गया', 'Reminder set ⏰': 'रिमाइंडर लग गया ⏰', 'Reminder updated ⏰': 'रिमाइंडर बदल गया ⏰',
   'Reminder on ⏰': 'रिमाइंडर चालू ⏰', 'Reminder off': 'रिमाइंडर बंद', 'Unread': 'अपठित', 'Documents ': 'दस्तावेज़', 'Updates': 'अपडेट',

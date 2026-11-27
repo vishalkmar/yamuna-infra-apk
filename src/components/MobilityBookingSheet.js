@@ -61,7 +61,7 @@ export default function MobilityBookingSheet({ visible, aid, onClose, onBooked }
       showToast('success', data.mode === 'buy' ? 'Order placed!' : 'Booked!', `${aid.name} · ₹${res.total}.`);
       const finish = () => { onBooked?.(); onClose(); };
       if (Number(res.total) > 0) {
-        await pay.start({ purpose: 'service', amount: Number(res.total), refId: res.id, remarks: `Mobility · ${aid.name} (${data.mode})`, onDone: finish });
+        await pay.start({ purpose: 'service', kind: 'mobility', amount: Number(res.total), refId: res.id, remarks: `Mobility · ${aid.name} (${data.mode})`, onDone: finish });
       } else finish();
     } catch (e) {
       showToast('error', 'Could not book', String(e));

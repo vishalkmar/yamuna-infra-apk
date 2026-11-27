@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -17,7 +17,7 @@ import { ensureNotifPermission } from './src/services/notifications';
 import { navigationRef } from './src/services/liveNotifications';
 import LiveNotificationsBridge from './src/components/LiveNotificationsBridge';
 import LanguageBridge from './src/components/LanguageBridge';
-import { loadSavedLanguage, onLanguageChange, currentLanguage } from './src/i18n';
+import { loadSavedLanguage } from './src/i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -28,15 +28,11 @@ export default function App() {
   // (Android 13+ drops notifications — and their sound — without it).
   useEffect(() => { ensureNotifPermission(); }, []);
 
-  // App language (English / हिन्दी): wait for the saved choice, then re-render
-  // everything when it changes — keeping the screen the user is on.
-  const [lang, setLang] = useState(currentLanguage());
+  // App language (English / हिन्दी): load the saved choice before the first
+  // screen. Switching later updates texts in place (see src/i18n) — the app
+  // is NOT restarted, so the current page and back history stay as they are.
   const [langReady, setLangReady] = useState(false);
-  const navState = useRef(undefined);
-  useEffect(() => {
-    loadSavedLanguage().then(l => { setLang(l); setLangReady(true); });
-    return onLanguageChange(setLang);
-  }, []);
+  useEffect(() => { loadSavedLanguage().then(() => setLangReady(true)); }, []);
   if (!langReady) return null;
 
   return (
@@ -45,7 +41,7 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
           <PaperProvider theme={theme}>
             <SafeAreaProvider>
-              <NavigationContainer key={lang} ref={navigationRef} initialState={navState.current} onStateChange={s => { navState.current = s; }}>
+              <NavigationContainer ref={navigationRef}>
                 <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
                 <RootNavigator />
                 <LiveNotificationsBridge />

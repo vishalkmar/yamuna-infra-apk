@@ -20,11 +20,13 @@ import {
 import { paymentApi } from '../../api/paymentApi';
 import { downloadFile } from '../../services/downloader';
 import { showToast } from '../../utils/toastConfig';
+import PropertyTransactionsTab from './PropertyTransactionsTab';
 
 const TABS = [
   { key: 'upcoming', label: 'All status' },
   { key: 'history',  label: 'History' },
   { key: 'ledger',   label: 'Ledger' },
+  { key: 'txns',     label: 'Transactions' },
 ];
 
 const STATUS_VARIANT = {
@@ -44,6 +46,7 @@ export default function PaymentDashboardScreen() {
   const [tab, setTab] = useState('upcoming');
   const [payTarget, setPayTarget] = useState(null);     // installment selected for paying
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [txnKey, setTxnKey] = useState(0);
 
   useEffect(() => { dispatch(loadMyProperties()); }, [dispatch]);
 
@@ -125,7 +128,7 @@ export default function PaymentDashboardScreen() {
             onPress={() => setTab(t.key)}
             style={[styles.tab, tab === t.key && styles.tabActive]}
           >
-            <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>{t.label}</Text>
+            <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.tabText, tab === t.key && styles.tabTextActive]}>{t.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -146,6 +149,10 @@ export default function PaymentDashboardScreen() {
 
       {tab === 'ledger' && (
         <LedgerTab ledger={ledger} loading={ledgerLoading} onDownload={downloadStatement} />
+      )}
+
+      {tab === 'txns' && (
+        <PropertyTransactionsTab propertyId={propertyId} token={token} refreshKey={txnKey} />
       )}
 
       {/* Pay-now sheet */}
@@ -176,7 +183,9 @@ export default function PaymentDashboardScreen() {
               reloadSchedule();
               if (tab === 'history') reloadHistory();
               if (tab === 'ledger')  reloadLedger();
+              setTxnKey(k => k + 1);
             } else {
+              setTxnKey(k => k + 1);
               showToast('warning', 'Still processing', 'We are confirming the payment with your bank.');
             }
           } catch (e) {
