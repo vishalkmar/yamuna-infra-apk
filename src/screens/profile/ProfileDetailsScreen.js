@@ -59,7 +59,6 @@ export default function ProfileDetailsScreen({ navigation }) {
     <ScreenContainer refreshing={loading} onRefresh={reload}>
       {/* header */}
       <View style={styles.header}>
-        <Image source={ART.detailsBuildings} style={styles.headerArt} resizeMode="contain" />
         <IconButton icon="arrow-left" size={52} color={palette.primary} onPress={() => navigation.goBack()} />
         <Text style={styles.headerTitle}>Profile Details</Text>
       </View>

@@ -18,6 +18,11 @@ export const servicesApi = {
     return data.data;
   },
 
+  listOfferings: async providerId => {
+    const { data } = await api.get(`/services/providers/${providerId}/offerings`);
+    return data.data;
+  },
+
   book: async payload => {
     if (ENV.USE_MOCK_API) return mockApi.bookService(payload);
     const { data } = await api.post('/services/book', payload);

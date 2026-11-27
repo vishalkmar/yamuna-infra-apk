@@ -99,7 +99,8 @@ export default function ServiceBookingSheet({ visible, category, categoryLabel, 
         });
         setPaying(false);
         setOrder(ord);
-        setCheckoutOpen(true);
+        // keep the sheet hidden (paying) and open checkout once it has gone
+        setTimeout(() => { setCheckoutOpen(true); setPaying(false); }, 350);
       } else {
         showToast('success', 'Booked!', `${categoryLabel} scheduled for ${data.startDate}.`);
         onBooked?.();
@@ -136,8 +137,7 @@ export default function ServiceBookingSheet({ visible, category, categoryLabel, 
 
   return (
     <>
-    <CashfreeCheckout visible={checkoutOpen} order={order} onClose={onPayCancel} onSuccess={onPaid} onCancel={onPayCancel} />
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible && !checkoutOpen && !order} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.header}>
@@ -274,6 +274,7 @@ export default function ServiceBookingSheet({ visible, category, categoryLabel, 
         </View>
       </View>
     </Modal>
+    <CashfreeCheckout visible={checkoutOpen} order={order} onClose={onPayCancel} onSuccess={onPaid} onCancel={onPayCancel} />
     </>
   );
 }

@@ -21,6 +21,7 @@ export function NeuStackHeader({ navigation, options, route, back }) {
 export const neuScreenOptions = {
   header: props => <NeuStackHeader {...props} />,
   contentStyle: { backgroundColor: palette.background },
+  animation: 'slide_from_right',
 };
 
 const styles = StyleSheet.create({

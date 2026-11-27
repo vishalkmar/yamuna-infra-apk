@@ -35,7 +35,7 @@ export default function ProfileHome({ navigation }) {
           </>
         )}
       />
-      <PageTitle title="My Profile" subtitle="Manage your account, preferences and app settings." art={ART.profileBuildings} />
+      <PageTitle title="My Profile" subtitle="Manage your account, preferences and app settings." />
 
       <Neu variant="raisedLg" radius={30} style={ps.hero}>
         <View style={ps.avatarRing}>

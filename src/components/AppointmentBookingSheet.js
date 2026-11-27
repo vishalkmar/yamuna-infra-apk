@@ -82,8 +82,7 @@ export default function AppointmentBookingSheet({ visible, doctor, onClose, onBo
 
   return (
     <>
-    {pay.element}
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible && !pay.active} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.header}>
@@ -143,6 +142,7 @@ export default function AppointmentBookingSheet({ visible, doctor, onClose, onBo
         </View>
       </View>
     </Modal>
+    {pay.element}
     </>
   );
 }

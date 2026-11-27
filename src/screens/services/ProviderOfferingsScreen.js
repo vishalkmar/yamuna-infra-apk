@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 import ScreenContainer from '../../components/ScreenContainer';
@@ -7,6 +7,7 @@ import EmptyState from '../../components/EmptyState';
 import ServiceBookingSheet from '../../components/ServiceBookingSheet';
 import { palette, radius, spacing, typography } from '../../theme';
 import { formatINR } from '../../utils/format';
+import { servicesApi } from '../../api/servicesApi';
 
 // Drill-down: a single provider's bookable offerings, each with its own Book
 // button. Reached by tapping a provider card on any service category screen.
@@ -15,7 +16,19 @@ export default function ProviderOfferingsScreen({ route }) {
   const [offering, setOffering] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const offerings = provider?.offerings || [];
+  // Use the offerings embedded in the provider list; if the server didn't
+  // send them, fetch this provider's live services + rates directly.
+  const [fetched, setFetched] = useState(null);
+  const [loadingOffers, setLoadingOffers] = useState(false);
+  useEffect(() => {
+    if (!provider?.id || (provider.offerings && provider.offerings.length)) return;
+    setLoadingOffers(true);
+    servicesApi.listOfferings(provider.id)
+      .then(list => setFetched(list || []))
+      .catch(() => setFetched([]))
+      .finally(() => setLoadingOffers(false));
+  }, [provider]);
+  const offerings = (provider?.offerings && provider.offerings.length ? provider.offerings : fetched) || [];
 
   const book = o => { setOffering(o); setSheetOpen(true); };
 
@@ -34,7 +47,9 @@ export default function ProviderOfferingsScreen({ route }) {
       </Card>
 
       <Text style={[typography.h3, styles.sectionTitle]}>Services offered</Text>
-      {offerings.length === 0 ? (
+      {loadingOffers ? (
+        <EmptyState icon="⏳" message="Loading services…" />
+      ) : offerings.length === 0 ? (
         <EmptyState icon="🧾" message="This provider hasn't listed services yet." />
       ) : offerings.map(o => (
         <Card key={o.id} style={styles.card}>

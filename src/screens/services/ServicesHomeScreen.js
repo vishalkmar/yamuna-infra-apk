@@ -59,7 +59,7 @@ export default function ResidentHome({ navigation }) {
           </>
         )}
       />
-      <PageTitle title="Resident Services" subtitle="Everything you need for life inside the community." art={ART.headerBuildings} />
+      <PageTitle title="Resident Services" subtitle="Everything you need for life inside the community." />
 
       <View style={rs.searchRow}>
         <Neu variant="inset" radius={28} style={rs.search}>

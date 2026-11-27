@@ -90,8 +90,7 @@ export default function WellnessBookingSheet({ visible, therapy, onClose, onBook
 
   return (
     <>
-    {pay.element}
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible && !pay.active} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.header}>
@@ -148,6 +147,7 @@ export default function WellnessBookingSheet({ visible, therapy, onClose, onBook
         </View>
       </View>
     </Modal>
+    {pay.element}
     </>
   );
 }

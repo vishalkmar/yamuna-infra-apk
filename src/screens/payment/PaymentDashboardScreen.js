@@ -73,8 +73,10 @@ export default function PaymentDashboardScreen() {
     setPayTarget(null);
     dispatch(resetPay());
   };
-  const openCheckout = () => setCheckoutOpen(true);
-  const closeCheckout = () => setCheckoutOpen(false);
+  const [sheetHidden, setSheetHidden] = useState(false);
+  // Close the pay sheet first, then show the checkout on top of everything.
+  const openCheckout = () => { setSheetHidden(true); setTimeout(() => setCheckoutOpen(true), 350); };
+  const closeCheckout = () => { setCheckoutOpen(false); setSheetHidden(false); setPayTarget(null); };
 
   if (!propertyId && !propertiesLoading) {
     return (
@@ -148,7 +150,7 @@ export default function PaymentDashboardScreen() {
 
       {/* Pay-now sheet */}
       <PayNowSheet
-        visible={!!payTarget}
+        visible={!!payTarget && !sheetHidden}
         installment={payTarget}
         pay={pay}
         onClose={closePaySheet}

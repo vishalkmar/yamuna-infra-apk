@@ -14,6 +14,10 @@ import { showToast } from '../utils/toastConfig';
 export default function useQuickPay() {
   const [order, setOrder] = useState(null);
   const [open, setOpen] = useState(false);
+  // `active` hides the booking sheet; the checkout opens a moment later so
+  // the sheet's modal has fully gone (otherwise Android can hide the checkout
+  // behind it or drop it altogether).
+  const [active, setActive] = useState(false);
   const [starting, setStarting] = useState(false);
   const done = useRef(null);
 
@@ -24,7 +28,8 @@ export default function useQuickPay() {
     try {
       const ord = await paymentApi.checkout({ purpose, amount: Number(amount), refId, remarks });
       setOrder(ord);
-      setOpen(true);
+      setActive(true);
+      setTimeout(() => setOpen(true), 350);
       return true;
     } catch (e) {
       showToast('warning', 'Booked — pay later', 'Online payment could not start. You can pay at the counter.');
@@ -50,6 +55,8 @@ export default function useQuickPay() {
     const cb = done.current;
     done.current = null;
     cb?.(paid);
+    // Only now let the owner sheet show again (the callback normally closes it).
+    setActive(false);
   };
 
   const element = (
@@ -62,5 +69,5 @@ export default function useQuickPay() {
     />
   );
 
-  return { start, element, starting };
+  return { start, element, starting, active };
 }
