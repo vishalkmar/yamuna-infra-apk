@@ -1,60 +1,46 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import { useSelector, useDispatch } from 'react-redux';
 import ScreenContainer from '../../components/ScreenContainer';
-import Card from '../../components/Card';
-import StatusChip from '../../components/StatusChip';
-import SectionHeader from '../../components/SectionHeader';
-import { palette, radius, spacing, typography } from '../../theme';
+import { Neu, IconTile, IconButton, BrandHeader, GoldHeading, ART, heroFill, navyFill } from '../../components/neu';
+import { palette, FONT, NEU } from '../../theme';
 import { formatINR, formatDate, daysUntil } from '../../utils/format';
 import { loadMyProperties, loadProgress } from '../../store/slices/projectSlice';
 import { loadMyProperties as loadPayProperties, loadSchedule as loadPaySchedule } from '../../store/slices/paymentSlice';
 
-// Grid columns sized to the screen so incomplete rows stay left-aligned.
-// The -1 buffer avoids sub-pixel overflow that would wrap the last column.
-const GRID_GAP = 10;
-const SCREEN_W = Dimensions.get('window').width;
-// Everything is designed at 400dp wide and scaled down (never up) so the
-// home screen fits small/budget phones (320–360dp) without wrapping or clipping.
-const SCALE = Math.min(1, Math.max(0.8, SCREEN_W / 400));
+// Designed at 400dp and scaled down (never up) so it fits 320–360dp phones.
+const W = Dimensions.get('window').width;
+const SCALE = Math.min(1, Math.max(0.8, W / 400));
 const ms = n => Math.round(n * SCALE);
-const colWidth = n => Math.floor((SCREEN_W - spacing.lg * 2 - GRID_GAP * (n - 1)) / n) - 1;
-const QUICK_W = colWidth(3);
-const SVC_W = colWidth(SCREEN_W < 340 ? 3 : 4);
+const PAD = 18;
+const QA_GAP = 8;
+const QA = Math.floor((W - PAD * 2 - QA_GAP * 5) / 6);
+const SVC_COLS = W < 340 ? 3 : 4;
+const SVC_GAP = 14;
+const SVC_W = Math.floor((W - PAD * 2 - SVC_GAP * (SVC_COLS - 1)) / SVC_COLS);
 
-const QUICK_TILES = [
-  { key: 'BookingDocket', label: 'Booking\nDocket', icon: '📘', tint: '#E8EEFF' },
-  { key: 'PaymentDashboard', label: 'Payments', icon: '💳', tint: '#E4F6EC' },
-  { key: 'ConstructionTracker', label: 'Progress', icon: '🏗️', tint: '#FFF0D6' },
-  { key: 'SiteVisit', label: 'Site\nOverview', icon: '🗺️', tint: '#FCE4E8' },
-  { key: 'Support', label: 'Support', icon: '🎧', tint: '#EDE7FF' },
-  { key: 'ProfileTab', label: 'Profile', icon: '👤', tint: '#E6F4FB' },
+const QUICK = [
+  { key: 'BookingDocket', label: 'Booking\nDocket', art: ART.qaDocket },
+  { key: 'PaymentDashboard', label: 'Payments', art: ART.qaPayments },
+  { key: 'ConstructionTracker', label: 'Progress', art: ART.qaProgress },
+  { key: 'SiteVisit', label: 'Site\nOverview', art: ART.qaSite },
+  { key: 'Support', label: 'Support', art: ART.qaSupport },
+  { key: 'ProfileTab', label: 'Profile', art: ART.qaProfile },
 ];
 
-// Every resident service, navigating into the Services tab's stack.
-const SERVICE_TILES = [
-  { key: 'HomeServices', label: 'Cleaning', icon: '🧹', tint: '#E8EEFF' },
-  { key: 'Housekeeping', label: 'Housekeeping', icon: '🧺', tint: '#FFF0D6' },
-  { key: 'CookBooking', label: 'Book a Cook', icon: '👨‍🍳', tint: '#FCE4E8' },
-  { key: 'MealOrder', label: 'Meal Tiffin', icon: '🍱', tint: '#E4F6EC' },
-  { key: 'HealthcareScreen', label: 'Healthcare', icon: '🩺', tint: '#E6F4FB' },
-  { key: 'Wheelchair', label: 'Mobility Aid', icon: '🦽', tint: '#EDE7FF' },
-  { key: 'WellnessScreen', label: 'Wellness', icon: '🧘', tint: '#FFF0D6' },
-  { key: 'SpiritualScreen', label: 'Spiritual', icon: '🕉️', tint: '#FCE4E8' },
-  { key: 'TempleDirectoryScreen', label: 'Temples', icon: '🛕', tint: '#E8EEFF' },
-  { key: 'Darshan', label: 'Darshan', icon: '🚕', tint: '#E4F6EC' },
+const SERVICES = [
+  { key: 'HomeServices', label: 'Cleaning', art: ART.hCleaning },
+  { key: 'Housekeeping', label: 'Housekeeping', art: ART.housekeeping },
+  { key: 'CookBooking', label: 'Book a Cook', art: ART.cook },
+  { key: 'MealOrder', label: 'Meal Tiffin', art: ART.hMeal },
+  { key: 'HealthcareScreen', label: 'Healthcare', art: ART.health },
+  { key: 'Wheelchair', label: 'Mobility Aid', art: ART.mobility },
+  { key: 'WellnessScreen', label: 'Wellness', art: ART.wellness },
+  { key: 'SpiritualScreen', label: 'Spiritual', art: ART.spiritual },
+  { key: 'TempleDirectoryScreen', label: 'Temples', art: ART.temples },
+  { key: 'Darshan', label: 'Darshan', art: ART.hDarshan },
 ];
-
-function GridTile({ item, width, onPress }) {
-  return (
-    <TouchableOpacity activeOpacity={0.8} style={[styles.tile, { width }]} onPress={onPress}>
-      <View style={[styles.iconBadge, { backgroundColor: item.tint }]}>
-        <Text style={styles.tileIcon}>{item.icon}</Text>
-      </View>
-      <Text style={styles.tileLabel} numberOfLines={2}>{item.label}</Text>
-    </TouchableOpacity>
-  );
-}
 
 export default function HomeScreen({ navigation }) {
   const dispatch = useDispatch();
@@ -63,195 +49,165 @@ export default function HomeScreen({ navigation }) {
   const paySchedule = useSelector(s => s.payment.schedule);
   const paySelectedId = useSelector(s => s.payment.selectedPropertyId);
 
-  // Load the resident's property + its construction progress for the hero card.
   useEffect(() => { dispatch(loadMyProperties()); dispatch(loadPayProperties()); }, [dispatch]);
-  useEffect(() => {
-    if (selectedPropertyId) dispatch(loadProgress(selectedPropertyId));
-  }, [dispatch, selectedPropertyId]);
-  useEffect(() => {
-    if (paySelectedId) dispatch(loadPaySchedule(paySelectedId));
-  }, [dispatch, paySelectedId]);
+  useEffect(() => { if (selectedPropertyId) dispatch(loadProgress(selectedPropertyId)); }, [dispatch, selectedPropertyId]);
+  useEffect(() => { if (paySelectedId) dispatch(loadPaySchedule(paySelectedId)); }, [dispatch, paySelectedId]);
 
   const unitLabel = property?.flatNo
     ? [property.tower && `Tower ${property.tower}`, property.flatNo].filter(Boolean).join('-')
-    : (property?.label || (properties[0]?.flatNo) || '—');
+    : (property?.label || properties[0]?.flatNo || '—');
   const projectName = property?.projectName || properties[0]?.projectName || 'Your residence';
   const hasProperty = properties.length > 0;
+  const completed = property?.workStatus === 'completed';
+  const pct = hasProperty ? Math.max(0, Math.min(100, Number(progressPct) || 0)) : 0;
 
-  // Next due comes from the real payment plan.
   const nextDue = paySchedule?.nextDue || null;
+  const dueIn = nextDue?.dueDate ? daysUntil(nextDue.dueDate) : null;
 
   return (
     <ScreenContainer>
-      <View style={styles.greetingRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={typography.caption}>Welcome back,</Text>
-          <Text style={styles.greetName} numberOfLines={1}>{user?.name || 'Customer'} 👋</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.bell}
-          onPress={() => navigation.navigate('NotificationsScreen')}
-        >
-          <Text style={{ fontSize: ms(18) }}>🔔</Text>
-        </TouchableOpacity>
+      <BrandHeader
+        subtitle="RESIDENT PORTAL"
+        right={(
+          <>
+            <IconButton icon="bell" dot onPress={() => navigation.navigate('NotificationsScreen')} />
+            <IconButton icon="user" onPress={() => navigation.navigate('ProfileTab')} />
+          </>
+        )}
+      />
+
+      {/* Welcome */}
+      <View style={styles.welcome}>
+        <Image source={ART.headerBuildings} style={styles.welcomeArt} resizeMode="contain" />
+        <Text style={styles.welcomeSmall}>Welcome back,</Text>
+        <Text style={styles.welcomeName} numberOfLines={1} adjustsFontSizeToFit>{user?.name || 'Resident'} 👋</Text>
       </View>
 
-      <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('ConstructionTracker')}>
-        <Card style={styles.heroCard}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <View style={{ flex: 1, paddingRight: spacing.sm }}>
+      {/* Hero unit card */}
+      <TouchableOpacity activeOpacity={0.92} onPress={() => navigation.navigate('ConstructionTracker')}>
+        <View style={[styles.hero, heroFill]}>
+          <Image source={ART.heroBuilding} style={styles.heroArt} resizeMode="contain" />
+          <View style={styles.heroTop}>
+            <View style={{ flex: 1, paddingRight: 10 }}>
               <Text style={styles.heroLabel}>YOUR UNIT</Text>
               <Text style={styles.heroUnit} numberOfLines={1} adjustsFontSizeToFit>{unitLabel}</Text>
               <Text style={styles.heroProject} numberOfLines={1}>{projectName}</Text>
             </View>
-            <StatusChip
-              label={property?.workStatus === 'completed' ? 'COMPLETED' : 'ACTIVE'}
-              variant={property?.workStatus === 'completed' ? 'info' : 'success'}
-            />
+            <View style={styles.activePill}>
+              <Text style={styles.activeText}>{completed ? 'COMPLETED' : 'ACTIVE'}</Text>
+              <View style={styles.activeDot} />
+            </View>
           </View>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${hasProperty ? progressPct : 0}%` }]} />
-          </View>
-          <Text style={styles.progressLabel}>
-            {hasProperty
-              ? <>Construction progress: <Text style={{ fontWeight: '700' }}>{progressPct}%</Text></>
-              : 'No property linked yet'}
+          <View style={styles.track}><View style={[styles.fill, { width: `${pct}%` }]} /></View>
+          <Text style={styles.heroProgress}>
+            {hasProperty ? <>Construction Progress: <Text style={{ fontWeight: '800', color: '#fff' }}>{pct}%</Text></> : 'No property linked yet'}
           </Text>
-        </Card>
+        </View>
       </TouchableOpacity>
 
-      <Card style={styles.dueCard}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View style={{ flex: 1 }}>
-            <Text style={typography.caption}>NEXT DUE</Text>
-            {nextDue ? (
-              <>
-                <Text style={styles.dueAmount} numberOfLines={1} adjustsFontSizeToFit>{formatINR(Number(nextDue.amount) + Number(nextDue.lateFee || 0))}</Text>
-                <Text style={styles.dueMeta} numberOfLines={2}>
-                  {nextDue.label} · {formatDate(nextDue.dueDate)}
-                  {nextDue.dueDate ? ` · ${daysUntil(nextDue.dueDate) >= 0 ? `${daysUntil(nextDue.dueDate)} days left` : `${Math.abs(daysUntil(nextDue.dueDate))} days overdue`}` : ''}
+      {/* Next due */}
+      <Neu variant="raised" radius={26} style={styles.due}>
+        <IconTile source={ART.wallet} size={ms(60)} radius={18} imageScale={0.7} />
+        <View style={styles.vDivider} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.dueLabel}>NEXT DUE</Text>
+          {nextDue ? (
+            <>
+              <Text style={styles.dueAmount} numberOfLines={1} adjustsFontSizeToFit>{formatINR(Number(nextDue.amount) + Number(nextDue.lateFee || 0))}</Text>
+              <Text style={styles.dueMeta} numberOfLines={1}>{nextDue.label} · {formatDate(nextDue.dueDate)}</Text>
+              {dueIn != null ? (
+                <Text style={[styles.dueMeta, { color: dueIn < 0 ? '#D32F2F' : '#16794A', fontWeight: '600' }]}>
+                  {dueIn >= 0 ? `${dueIn} days left` : `${Math.abs(dueIn)} days overdue`}
                 </Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.dueAmount}>—</Text>
-                <Text style={typography.bodyMuted}>No dues pending</Text>
-              </>
-            )}
-          </View>
-          <TouchableOpacity
-            style={styles.payBtn}
-            onPress={() => navigation.navigate('PaymentDashboard')}
-          >
-            <Text style={styles.payBtnText}>{nextDue ? 'Pay Now' : 'View'}</Text>
-          </TouchableOpacity>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <Text style={styles.dueAmount}>—</Text>
+              <Text style={styles.dueMeta}>No dues pending</Text>
+            </>
+          )}
         </View>
-      </Card>
+        <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('PaymentDashboard')} style={[styles.payBtn, navyFill]}>
+          <Text style={styles.payText}>{nextDue ? 'Pay Now' : 'View'}</Text>
+          <Feather name="arrow-right" size={16} color="#fff" style={{ marginLeft: 6 }} />
+        </TouchableOpacity>
+      </Neu>
 
-      <SectionHeader title="Quick Access" />
-      <View style={styles.grid}>
-        {QUICK_TILES.map(item => (
-          <GridTile key={item.key} item={item} width={QUICK_W} onPress={() => navigation.navigate(item.key)} />
+      <GoldHeading title="Quick Access" />
+      <View style={styles.qaRow}>
+        {QUICK.map(q => (
+          <TouchableOpacity key={q.key} activeOpacity={0.8} style={{ width: QA, alignItems: 'center', overflow: 'visible' }} onPress={() => navigation.navigate(q.key)}>
+            <IconTile source={q.art} size={QA} radius={Math.round(QA * 0.3)} imageScale={0.7} />
+            <Text style={styles.qaLabel} numberOfLines={2}>{q.label}</Text>
+          </TouchableOpacity>
         ))}
       </View>
 
-      <SectionHeader title="Resident Services" subtitle="Lifestyle, health, spiritual & community" />
+      <GoldHeading title="Resident Services" subtitle="Lifestyle, health, spiritual & community" />
       <View style={styles.grid}>
-        {SERVICE_TILES.map(item => (
-          <GridTile
-            key={item.key}
-            item={item}
-            width={SVC_W}
-            onPress={() => navigation.navigate('ResidentTab', { screen: item.key })}
-          />
+        {SERVICES.map(s => (
+          <TouchableOpacity
+            key={s.key}
+            activeOpacity={0.8}
+            style={{ width: SVC_W, alignItems: 'center', marginBottom: 14 }}
+            onPress={() => navigation.navigate('ResidentTab', { screen: s.key, initial: false })}
+          >
+            <IconTile source={s.art} size={Math.min(ms(72), SVC_W - 8)} radius={22} imageScale={0.74} />
+            <Text style={styles.svcLabel} numberOfLines={1}>{s.label}</Text>
+          </TouchableOpacity>
         ))}
       </View>
 
-      <TouchableOpacity
-        style={styles.sos}
-        onPress={() => navigation.navigate('SOSScreen')}
-      >
-        <Text style={styles.sosText} numberOfLines={1} adjustsFontSizeToFit>🚨  Emergency SOS — Hold to Activate</Text>
+      {/* SOS */}
+      <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('SOSScreen')} style={styles.sos}>
+        <Image source={ART.sosSiren} style={styles.siren} resizeMode="contain" />
+        <Text style={styles.sosText} numberOfLines={1} adjustsFontSizeToFit>Emergency SOS — Hold to Activate</Text>
+        <View style={styles.sosBtn}><Text style={styles.sosBtnText}>SOS</Text></View>
       </TouchableOpacity>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  greetingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  greetName: { ...typography.h2, fontSize: ms(19) },
-  bell: {
-    width: ms(40), height: ms(40), borderRadius: ms(20),
-    backgroundColor: palette.surface,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: palette.divider,
-  },
-  heroCard: {
-    backgroundColor: palette.primary,
-    borderColor: palette.primary,
-    marginBottom: spacing.md,
-  },
-  heroLabel: { color: '#A8B2D4', fontSize: ms(10.5), fontWeight: '700', letterSpacing: 0.8 },
-  heroUnit: { color: '#fff', fontSize: ms(22), fontWeight: '800', marginTop: 2 },
-  heroProject: { color: '#DBE3FF', fontSize: ms(12.5), marginTop: 2 },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginTop: spacing.md,
-    overflow: 'hidden',
-  },
-  progressFill: { height: '100%', backgroundColor: palette.accent },
-  progressLabel: { color: '#DBE3FF', fontSize: ms(11.5), marginTop: 6 },
+  welcome: { minHeight: ms(108), justifyContent: 'center', marginBottom: 6 },
+  welcomeArt: { position: 'absolute', right: -PAD - 6, top: -16, width: W * 0.46, height: ms(112) },
+  welcomeSmall: { fontFamily: FONT, fontSize: ms(16), color: palette.textMuted },
+  welcomeName: { fontFamily: FONT, fontSize: ms(26), fontWeight: '800', color: palette.navy, marginTop: 2, maxWidth: '58%' },
 
-  dueCard: { marginBottom: spacing.md },
-  dueAmount: { fontSize: ms(20), fontWeight: '800', color: palette.text, marginTop: 2 },
-  dueMeta: { ...typography.bodyMuted, fontSize: ms(12.5) },
-  payBtn: {
-    backgroundColor: palette.primary,
-    paddingHorizontal: ms(15), paddingVertical: ms(9), marginLeft: spacing.sm,
-    borderRadius: radius.md,
-    alignSelf: 'center',
-  },
-  payBtnText: { color: '#fff', fontWeight: '700', fontSize: ms(12.5) },
+  hero: { borderRadius: 26, padding: ms(22), overflow: 'hidden', boxShadow: '0px 14px 26px rgba(19,40,90,0.35), -6px -6px 14px rgba(255,255,255,0.9)' },
+  heroArt: { position: 'absolute', right: 0, bottom: 0, width: W * 0.3, height: ms(96), opacity: 0.5 },
+  heroTop: { flexDirection: 'row', alignItems: 'flex-start' },
+  heroLabel: { fontFamily: FONT, color: '#AEBBDA', fontSize: ms(12.5), fontWeight: '700', letterSpacing: 1.6 },
+  heroUnit: { fontFamily: FONT, color: '#fff', fontSize: ms(29), fontWeight: '800', marginTop: 4 },
+  heroProject: { fontFamily: FONT, color: '#DCE4F7', fontSize: ms(15.5), marginTop: 2 },
+  activePill: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E5F8EC', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+  activeText: { fontFamily: FONT, fontSize: ms(12), fontWeight: '800', color: '#15803D', letterSpacing: 0.6 },
+  activeDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#16A34A', marginLeft: 6 },
+  track: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.28)', marginTop: ms(20), width: '68%', overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 4, backgroundColor: palette.gold },
+  heroProgress: { fontFamily: FONT, color: '#DCE4F7', fontSize: ms(14.5), marginTop: 12 },
 
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: GRID_GAP,
-  },
-  tile: {
-    alignItems: 'center',
-    paddingVertical: ms(6),
-  },
-  iconBadge: {
-    width: ms(48), height: ms(48),
-    borderRadius: ms(14),
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-  },
-  tileIcon: { fontSize: ms(22) },
-  // No fixed lineHeight: with a user font scale it would clip the 2nd line.
-  tileLabel: { fontSize: ms(11), fontWeight: '600', color: palette.text, textAlign: 'center' },
+  due: { flexDirection: 'row', alignItems: 'center', padding: ms(16), marginTop: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)' },
+  vDivider: { width: 1, height: '70%', backgroundColor: '#D3DBE8', marginHorizontal: ms(14) },
+  dueLabel: { fontFamily: FONT, fontSize: ms(12.5), color: palette.textMuted, letterSpacing: 0.6 },
+  dueAmount: { fontFamily: FONT, fontSize: ms(26), fontWeight: '800', color: palette.navy, marginTop: 2 },
+  dueMeta: { fontFamily: FONT, fontSize: ms(13.5), color: palette.textMuted, marginTop: 2 },
+  payBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: 999, paddingHorizontal: ms(16), paddingVertical: ms(11), marginLeft: 8, boxShadow: NEU.primary },
+  payText: { fontFamily: FONT, color: '#fff', fontWeight: '700', fontSize: ms(14.5) },
+
+  qaRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  qaLabel: { fontFamily: FONT, fontSize: ms(11), fontWeight: '600', color: palette.navy, textAlign: 'center', marginTop: 8, width: QA + QA_GAP, marginHorizontal: -QA_GAP / 2 },
+
+  grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: SVC_GAP },
+  svcLabel: { fontFamily: FONT, fontSize: ms(13), fontWeight: '600', color: palette.navy, textAlign: 'center', marginTop: 8 },
 
   sos: {
-    marginTop: spacing.lg,
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-    borderRadius: radius.lg,
-    paddingVertical: ms(12), paddingHorizontal: spacing.md,
-    alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center', marginTop: 10, borderRadius: 999, paddingLeft: 16, paddingRight: 6, paddingVertical: 6,
+    backgroundColor: '#FBE8EC', boxShadow: NEU.raisedSm, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)',
   },
-  sosText: { color: '#B91C1C', fontWeight: '700', fontSize: ms(13.5) },
+  siren: { width: ms(40), height: ms(40) },
+  sosText: { flex: 1, fontFamily: FONT, color: '#C62828', fontWeight: '800', fontSize: ms(16), marginLeft: 10 },
+  sosBtn: { width: ms(64), height: ms(64), borderRadius: ms(32), backgroundColor: '#E53935', alignItems: 'center', justifyContent: 'center', boxShadow: NEU.danger, borderWidth: 3, borderColor: '#FFD4D4' },
+  sosBtnText: { fontFamily: FONT, color: '#fff', fontWeight: '800', fontSize: ms(17) },
 });

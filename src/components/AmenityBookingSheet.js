@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Input from './Input';
 import Button from './Button';
 import Stepper from './Stepper';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { loadAmenitySlots, bookAmenity, clearAmenitySlots } from '../store/slices/communitySlice';
 import { showToast } from '../utils/toastConfig';
 
@@ -225,18 +225,18 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   close: { fontSize: 26, color: palette.textMuted },
   slotRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: 6 },
-  slot: { paddingHorizontal: 12, paddingVertical: 9, borderRadius: radius.md, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, marginRight: spacing.sm, marginBottom: spacing.sm },
+  slot: { paddingHorizontal: 12, paddingVertical: 9, borderRadius: radius.md,   backgroundColor: palette.surface, marginRight: spacing.sm, marginBottom: spacing.sm, boxShadow: NEU.raisedSm },
   slotActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   slotText: { fontSize: 12, fontWeight: '700', color: palette.text },
   slotTextActive: { color: '#fff' },
   noSlot: { color: palette.error, marginTop: spacing.sm, fontSize: 13 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: 6, marginBottom: spacing.md },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, marginRight: spacing.sm, marginBottom: spacing.sm },
+  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill,   backgroundColor: palette.surface, marginRight: spacing.sm, marginBottom: spacing.sm, boxShadow: NEU.raisedSm },
   chipActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   chipText: { fontSize: 12, fontWeight: '600', color: palette.text },
   chipTextActive: { color: '#fff' },
   termsRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm },
-  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: palette.border, alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm },
+  checkbox: { width: 22, height: 22, borderRadius: 6,   alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm, boxShadow: NEU.raisedSm },
   checkboxOn: { backgroundColor: palette.primary, borderColor: palette.primary },
   checkmark: { color: '#fff', fontSize: 14, fontWeight: '800' },
   termsText: { flex: 1, fontSize: 13, color: palette.text },

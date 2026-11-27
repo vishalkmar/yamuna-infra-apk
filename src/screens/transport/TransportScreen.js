@@ -9,7 +9,7 @@ import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
 import LocationPicker from '../../components/LocationPicker';
 import CashfreeCheckout from '../../components/CashfreeCheckout';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatINR, formatDate } from '../../utils/format';
 import { loadEstimate, bookRide, loadRides, clearEstimate } from '../../store/slices/transportSlice';
 import { paymentApi } from '../../api/paymentApi';
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
 
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
   distance: { fontSize: 13, fontWeight: '700', color: palette.textMuted },
-  optCard: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm, borderWidth: 1, borderColor: palette.divider },
+  optCard: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm, boxShadow: NEU.raisedSm  },
   optCardSel: { borderColor: palette.primary, backgroundColor: '#EEF2FF' },
   optIcon: { fontSize: 28, marginRight: spacing.md },
   flex1: { flex: 1 },

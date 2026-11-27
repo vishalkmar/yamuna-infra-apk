@@ -10,7 +10,7 @@ import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
 import AppointmentBookingSheet from '../../components/AppointmentBookingSheet';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatDate } from '../../utils/format';
 import { showToast } from '../../utils/toastConfig';
 import { loadDoctors, loadMyAppointments, orderMedicine } from '../../store/slices/healthcareSlice';
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   heroSub: { color: '#DBE3FF', fontSize: 13, marginTop: 6, lineHeight: 19 },
 
   chipRow: { paddingVertical: spacing.xs, gap: spacing.sm, marginBottom: spacing.sm },
-  chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, marginRight: spacing.sm },
+  chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill,   backgroundColor: palette.surface, marginRight: spacing.sm, boxShadow: NEU.raisedSm },
   chipActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   chipText: { fontSize: 13, fontWeight: '600', color: palette.textMuted },
   chipTextActive: { color: '#fff' },

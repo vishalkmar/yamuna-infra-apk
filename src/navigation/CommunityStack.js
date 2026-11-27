@@ -1,18 +1,14 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { neuScreenOptions } from './neuStack';
 import CommunityScreen from '../screens/community/CommunityScreen';
 import RewardsScreen from '../screens/rewards/RewardsScreen';
 import { palette } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
-const screenOptions = {
-  headerStyle: { backgroundColor: palette.surface },
-  headerTitleStyle: { fontWeight: '700', fontSize: 16 },
-  headerTintColor: palette.text,
-  headerShadowVisible: false,
-  contentStyle: { backgroundColor: palette.background },
-};
+// Neumorphic header (round back button + bold title) for every inner screen.
+const screenOptions = neuScreenOptions;
 
 export default function CommunityStack() {
   return (

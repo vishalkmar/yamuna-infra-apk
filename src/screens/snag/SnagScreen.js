@@ -9,7 +9,7 @@ import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
 import ReportSnagSheet from '../../components/ReportSnagSheet';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatDate } from '../../utils/format';
 import { showToast } from '../../utils/toastConfig';
 import { loadSnags, signoffSnag } from '../../store/slices/snagSlice';
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   chipRow: { paddingVertical: spacing.xs, gap: spacing.sm, marginBottom: spacing.sm },
   chip: {
     paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill,
-    borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, marginRight: spacing.sm,
+      backgroundColor: palette.surface, marginRight: spacing.sm, boxShadow: NEU.raisedSm
   },
   chipActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   chipText: { fontSize: 13, fontWeight: '600', color: palette.textMuted },

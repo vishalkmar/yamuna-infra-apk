@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 
 export default function Stepper({ label, value, onChange, min = 0, max = 10, suffix }) {
   const dec = () => onChange(Math.max(min, value - 1));
@@ -33,9 +33,9 @@ const styles = StyleSheet.create({
   btn: {
     width: 44, height: 44,
     borderRadius: radius.md,
-    borderWidth: 1, borderColor: palette.border,
+     
     backgroundColor: palette.surface,
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center', boxShadow: NEU.raisedSm
   },
   btnDisabled: { backgroundColor: palette.surfaceAlt, borderColor: palette.divider },
   btnText: { fontSize: 22, fontWeight: '700', color: palette.primary },

@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Linking } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
 
 import CashfreeCheckout from '../../components/CashfreeCheckout';
 import ScreenContainer from '../../components/ScreenContainer';
@@ -10,12 +8,10 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import StatusChip from '../../components/StatusChip';
 import Input from '../../components/Input';
-import RadioGroup from '../../components/RadioGroup';
 import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatINR, formatDate, daysUntil } from '../../utils/format';
-import { paymentSchema } from '../../utils/validation';
 import {
   loadMyProperties, loadSchedule, loadHistory, loadLedger,
   initiatePayment, verifyPayment,
@@ -36,12 +32,6 @@ const STATUS_VARIANT = {
   overdue:  'error',
   upcoming: 'neutral',
 };
-
-const PAYMENT_METHODS = [
-  { value: 'cashfree',   label: 'Cashfree (UPI / Cards / NetBanking)' },
-  { value: 'upi',        label: 'UPI direct' },
-  { value: 'netbanking', label: 'NetBanking' },
-];
 
 export default function PaymentDashboardScreen() {
   const dispatch = useDispatch();
@@ -451,40 +441,18 @@ function LedgerTab({ ledger, loading, onDownload }) {
 
 function PayNowSheet({ visible, installment, pay, onClose, onOpenCheckout }) {
   const dispatch = useDispatch();
-  const totalDue = installment
-    ? Number(installment.amount) + Number(installment.lateFee || 0)
-    : 0;
+  const [consent, setConsent] = useState(false);
+  const base = installment ? Number(installment.amount) : 0;
+  const late = installment ? Number(installment.lateFee || 0) : 0;
+  const totalDue = base + late;
 
-  const { control, handleSubmit, watch, formState: { errors }, reset } = useForm({
-    resolver: yupResolver(paymentSchema),
-    defaultValues: {
-      amount: '',
-      paymentMode: 'cashfree',
-      upiId: '',
-      remarks: '',
-      consent: false,
-    },
-  });
+  // Fresh consent every time the sheet opens for an installment.
+  useEffect(() => { if (installment) setConsent(false); }, [installment]);
 
-  // Reset form whenever sheet opens for a new installment
-  useEffect(() => {
-    if (installment) {
-      reset({
-        amount: String(totalDue),
-        paymentMode: 'cashfree',
-        upiId: '',
-        remarks: installment.label,
-        consent: false,
-      });
-    }
-  }, [installment, totalDue, reset]);
-
-  const mode = watch('paymentMode');
-  const consent = watch('consent');
-
+  // One way to pay: Cashfree's secure page (UPI, cards, net banking, wallets).
+  // The server charges this installment's own amount, so nothing is editable.
   const submit = async () => {
     try {
-      // Server uses the installment's own amount — only the id is needed.
       await dispatch(initiatePayment({ installmentId: installment.id })).unwrap();
       onOpenCheckout();
     } catch (e) {
@@ -499,99 +467,40 @@ function PayNowSheet({ visible, installment, pay, onClose, onOpenCheckout }) {
       <View style={styles.modalOverlay}>
         <View style={styles.sheet}>
           <View style={styles.sheetHeader}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={typography.h2}>Pay Installment</Text>
-              <Text style={typography.caption}>{installment.label}</Text>
+              <Text style={typography.caption}>{installment.label}{installment.dueDate ? ` · due ${formatDate(installment.dueDate)}` : ''}</Text>
             </View>
             <TouchableOpacity onPress={onClose} hitSlop={10}>
               <Text style={{ fontSize: 22, color: palette.textMuted }}>×</Text>
             </TouchableOpacity>
           </View>
 
-          <Controller
-            control={control}
-            name="amount"
-            render={({ field: { value, onChange } }) => (
-              <Input
-                label={`Amount (max ${formatINR(totalDue)})`}
-                placeholder="0"
-                keyboardType="numeric"
-                value={String(value)}
-                onChangeText={onChange}
-                error={errors.amount?.message}
-              />
-            )}
-          />
+          <View style={styles.payBox}>
+            <View style={styles.payRow}><Text style={styles.payLabel}>Installment amount</Text><Text style={styles.payVal}>{formatINR(base)}</Text></View>
+            {late > 0 ? (
+              <View style={styles.payRow}><Text style={[styles.payLabel, { color: palette.error }]}>Late fee</Text><Text style={[styles.payVal, { color: palette.error }]}>+ {formatINR(late)}</Text></View>
+            ) : null}
+            <View style={[styles.payRow, styles.payTotalRow]}><Text style={styles.payTotalLabel}>Total payable</Text><Text style={styles.payTotal}>{formatINR(totalDue)}</Text></View>
+          </View>
 
-          <Controller
-            control={control}
-            name="paymentMode"
-            render={({ field: { value, onChange } }) => (
-              <RadioGroup
-                label="Payment Mode"
-                value={value}
-                onChange={onChange}
-                direction="column"
-                options={PAYMENT_METHODS}
-                error={errors.paymentMode?.message}
-              />
-            )}
-          />
+          <View style={styles.methodsRow}>
+            {['UPI', 'Cards', 'Net Banking', 'Wallets'].map(m => (
+              <View key={m} style={styles.methodChip}><Text style={styles.methodText}>{m}</Text></View>
+            ))}
+          </View>
+          <Text style={styles.secureNote}>🔒 You will choose UPI, card or net banking on Cashfree's secure page.</Text>
 
-          {mode === 'upi' ? (
-            <Controller
-              control={control}
-              name="upiId"
-              render={({ field: { value, onChange } }) => (
-                <Input
-                  label="UPI ID"
-                  placeholder="yourname@upi"
-                  value={value}
-                  onChangeText={onChange}
-                  autoCapitalize="none"
-                  error={errors.upiId?.message}
-                />
-              )}
-            />
-          ) : null}
-
-          <Controller
-            control={control}
-            name="remarks"
-            render={({ field: { value, onChange } }) => (
-              <Input
-                label="Remarks"
-                placeholder="Add a note"
-                value={value}
-                onChangeText={onChange}
-                maxLength={200}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="consent"
-            render={({ field: { value, onChange } }) => (
-              <TouchableOpacity
-                style={styles.consentRow}
-                onPress={() => onChange(!value)}
-                activeOpacity={0.85}
-              >
-                <View style={[styles.checkbox, value && styles.checkboxChecked]}>
-                  {value ? <Text style={{ color: '#fff', fontSize: 13 }}>✓</Text> : null}
-                </View>
-                <Text style={styles.consentText}>
-                  I agree to the payment terms & conditions.
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-          {errors.consent ? <Text style={styles.errorText}>{errors.consent.message}</Text> : null}
+          <TouchableOpacity style={styles.consentRow} onPress={() => setConsent(v => !v)} activeOpacity={0.85}>
+            <View style={[styles.checkbox, consent && styles.checkboxChecked]}>
+              {consent ? <Text style={{ color: '#fff', fontSize: 13 }}>✓</Text> : null}
+            </View>
+            <Text style={styles.consentText}>I agree to the payment terms & conditions.</Text>
+          </TouchableOpacity>
 
           <Button
-            title={pay.busy ? 'Starting…' : 'Continue to Cashfree'}
-            onPress={handleSubmit(submit)}
+            title={pay.busy ? 'Opening Cashfree…' : `Pay ${formatINR(totalDue)} with Cashfree`}
+            onPress={submit}
             disabled={!consent || pay.busy}
             loading={pay.busy}
             style={{ marginTop: spacing.md }}
@@ -608,6 +517,17 @@ function PayNowSheet({ visible, installment, pay, onClose, onOpenCheckout }) {
 
 const styles = StyleSheet.create({
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  payBox: { backgroundColor: palette.surfaceAlt, borderRadius: radius.lg, padding: spacing.md, marginTop: spacing.sm },
+  payRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
+  payLabel: { ...typography.body, color: palette.textMuted },
+  payVal: { ...typography.body, fontWeight: '600' },
+  payTotalRow: { borderTopWidth: 1, borderTopColor: palette.border, marginTop: 6, paddingTop: 10 },
+  payTotalLabel: { ...typography.label, fontSize: 15 },
+  payTotal: { fontSize: 22, fontWeight: '800', color: palette.primary },
+  methodsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.md },
+  methodChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor: '#E8EEFF' },
+  methodText: { fontSize: 12, fontWeight: '600', color: palette.primary },
+  secureNote: { ...typography.caption, marginTop: spacing.sm },
 
   hero: { marginBottom: spacing.md },
   heroOverdue: { backgroundColor: '#FEF2F2', borderColor: '#FECACA' },
@@ -630,9 +550,9 @@ const styles = StyleSheet.create({
 
   filterChip: {
     paddingHorizontal: 14, paddingVertical: 6,
-    borderRadius: radius.pill, borderWidth: 1,
-    borderColor: palette.border, backgroundColor: palette.surface,
-    marginRight: 8,
+    borderRadius: radius.pill, 
+     backgroundColor: palette.surface,
+    marginRight: 8, boxShadow: NEU.raisedSm
   },
   filterChipActive: { borderColor: palette.primary, backgroundColor: '#EEF2FF' },
   filterChipText: { fontSize: 12, color: palette.textMuted, fontWeight: '600' },
@@ -672,10 +592,10 @@ const styles = StyleSheet.create({
   consentRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm },
   checkbox: {
     width: 22, height: 22, borderRadius: 5,
-    borderWidth: 1.5, borderColor: palette.border,
+     
     alignItems: 'center', justifyContent: 'center',
     marginRight: spacing.sm,
-    backgroundColor: palette.surface,
+    backgroundColor: palette.surface, boxShadow: NEU.raisedSm
   },
   checkboxChecked: { backgroundColor: palette.primary, borderColor: palette.primary },
   consentText: { fontSize: 13, color: palette.text, flex: 1 },

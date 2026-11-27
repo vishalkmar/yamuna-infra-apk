@@ -9,7 +9,7 @@ import Input from './Input';
 import Button from './Button';
 import RadioGroup from './RadioGroup';
 import Stepper from './Stepper';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { placeOrder, subscribe } from '../store/slices/mealSlice';
 import { showToast } from '../utils/toastConfig';
 import { MEAL_TYPES, DIET_TYPES, mealLabel, dietLabel } from '../utils/mealOptions';
@@ -198,8 +198,8 @@ const styles = StyleSheet.create({
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: 6, marginBottom: spacing.md },
   chip: {
     paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.pill,
-    borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface,
-    marginRight: spacing.sm, marginBottom: spacing.sm,
+      backgroundColor: palette.surface,
+    marginRight: spacing.sm, marginBottom: spacing.sm, boxShadow: NEU.raisedSm
   },
   chipActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   chipText: { fontSize: 13, fontWeight: '600', color: palette.text },

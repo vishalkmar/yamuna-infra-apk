@@ -6,7 +6,7 @@ import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
 import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { showToast } from '../../utils/toastConfig';
 import { playSosAlarm } from '../../services/notifications';
 import { loadContacts, activateSos } from '../../store/slices/sosSlice';
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   bigBtn: {
     width: 200, height: 200, borderRadius: 100, backgroundColor: '#DC2626',
     alignItems: 'center', justifyContent: 'center',
-    elevation: 8, shadowColor: '#DC2626', shadowOpacity: 0.4, shadowRadius: 16, shadowOffset: { width: 0, height: 6 },
+    boxShadow: NEU.danger,
   },
   bigText: { color: '#fff', fontSize: 44, fontWeight: '900', letterSpacing: 2 },
   bigHint: { color: '#FECACA', fontSize: 12, fontWeight: '700', marginTop: 4 },

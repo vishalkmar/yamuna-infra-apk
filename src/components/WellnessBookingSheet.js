@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Input from './Input';
 import Button from './Button';
 import RadioGroup from './RadioGroup';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { loadSlots, bookTherapy, clearSlots } from '../store/slices/wellnessSlice';
 import { showToast } from '../utils/toastConfig';
 import useQuickPay from '../hooks/useQuickPay';
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   close: { fontSize: 26, color: palette.textMuted },
   slotRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: 6 },
-  slot: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.md, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, marginRight: spacing.sm, marginBottom: spacing.sm },
+  slot: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.md,   backgroundColor: palette.surface, marginRight: spacing.sm, marginBottom: spacing.sm, boxShadow: NEU.raisedSm },
   slotActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   slotText: { fontSize: 13, fontWeight: '700', color: palette.text },
   slotTextActive: { color: '#fff' },

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { palette, spacing } from '../theme';
+import { palette, spacing, NEU } from '../theme';
 
 const CATEGORY_ICON = {
   payment: '💳', document: '📄', inspection: '🔍', handover: '🔑',
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginRight: spacing.md,
   },
   tickDone: { backgroundColor: '#DCFCE7' },
-  tickPending: { backgroundColor: palette.surfaceAlt, borderWidth: 1, borderColor: palette.border },
+  tickPending: { backgroundColor: palette.surfaceAlt, boxShadow: NEU.raisedSm  },
   tickText: { fontSize: 14, fontWeight: '800', color: palette.textMuted },
   tickTextDone: { color: '#15803D' },
   step: { fontSize: 14, fontWeight: '600', color: palette.text },

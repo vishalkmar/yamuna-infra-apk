@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList } from 'react-native';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 
 export default function Dropdown({ label, value, options = [], onChange, placeholder = 'Select…', error }) {
   const [open, setOpen] = useState(false);
@@ -60,8 +60,8 @@ const styles = StyleSheet.create({
   field: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.md, paddingVertical: 12,
-    borderWidth: 1, borderColor: palette.border, borderRadius: radius.md,
-    backgroundColor: palette.surface,
+    borderRadius: 20,
+    backgroundColor: palette.surface, boxShadow: NEU.inset,
   },
   fieldError: { borderColor: palette.error },
   fieldText: { fontSize: 15, color: palette.text },
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   err: { color: palette.error, fontSize: 12, marginTop: 4 },
 
   overlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.45)', justifyContent: 'center', padding: spacing.lg },
-  sheet: { backgroundColor: palette.surface, borderRadius: radius.lg, padding: spacing.md, maxHeight: '70%' },
+  sheet: { backgroundColor: palette.surface, borderRadius: 26, padding: spacing.md, maxHeight: '70%', boxShadow: NEU.raisedLg },
   sheetTitle: { ...typography.h3, marginBottom: spacing.sm },
   option: { paddingVertical: 14, paddingHorizontal: spacing.sm, flexDirection: 'row', justifyContent: 'space-between' },
   optionText: { fontSize: 15, color: palette.text },

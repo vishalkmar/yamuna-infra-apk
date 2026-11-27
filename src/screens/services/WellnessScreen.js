@@ -8,7 +8,7 @@ import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
 import WellnessBookingSheet from '../../components/WellnessBookingSheet';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatDate } from '../../utils/format';
 import { loadTherapies, loadBookings } from '../../store/slices/wellnessSlice';
 
@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   tile: {
     width: '48.5%', backgroundColor: palette.surface, borderRadius: radius.lg,
-    borderWidth: 1, borderColor: palette.divider, padding: spacing.lg,
-    marginBottom: spacing.sm, alignItems: 'flex-start',
+      padding: spacing.lg,
+    marginBottom: spacing.sm, alignItems: 'flex-start', boxShadow: NEU.raisedSm
   },
   tileIcon: { fontSize: 30, marginBottom: 6 },
   tileName: { fontSize: 15, fontWeight: '700', color: palette.text },

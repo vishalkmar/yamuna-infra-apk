@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, FlatList } from 'react-native';
 
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { transportApi } from '../api/transportApi';
 import { ensureLocationPermission, getCurrentLocation } from '../services/location';
 import { showToast } from '../utils/toastConfig';
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   field: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.md, paddingVertical: 12,
-    borderWidth: 1, borderColor: palette.border, borderRadius: radius.md, backgroundColor: palette.surface,
+      borderRadius: radius.md, backgroundColor: palette.surface, boxShadow: NEU.raisedSm
   },
   fieldText: { fontSize: 15, color: palette.text, flex: 1, marginRight: spacing.sm },
   placeholder: { color: palette.textMuted },
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   close: { fontSize: 26, color: palette.textMuted },
   search: {
-    backgroundColor: palette.surface, borderRadius: radius.md, borderWidth: 1, borderColor: palette.border,
-    paddingHorizontal: spacing.md, paddingVertical: 10, color: palette.text, fontSize: 15, marginBottom: spacing.sm,
+    backgroundColor: palette.surface, borderRadius: radius.md,  
+    paddingHorizontal: spacing.md, paddingVertical: 10, color: palette.text, fontSize: 15, marginBottom: spacing.sm, boxShadow: NEU.raisedSm
   },
   currentRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: spacing.sm },
   currentIcon: { fontSize: 18, marginRight: spacing.sm },

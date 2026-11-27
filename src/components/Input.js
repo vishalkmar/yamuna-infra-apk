@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, spacing, typography, NEU } from '../theme';
 
 const Input = forwardRef(function Input(
   {
@@ -61,26 +61,27 @@ export default Input;
 
 const styles = StyleSheet.create({
   wrapper: { marginBottom: spacing.md },
-  label: { ...typography.label, marginBottom: 6 },
+  label: { ...typography.label, fontSize: 14, marginBottom: 8, marginLeft: 4 },
+  // Neumorphic well: the field is pressed into the surface.
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
+    borderRadius: 20,
+    paddingHorizontal: spacing.lg,
+    minHeight: 56,
+    boxShadow: NEU.inset,
   },
   input: {
     flex: 1,
-    paddingVertical: 12,
-    fontSize: 15,
+    paddingVertical: 14,
+    fontSize: 16,
     color: palette.text,
   },
-  leftIcon: { marginRight: spacing.sm },
+  leftIcon: { marginRight: spacing.md, paddingRight: spacing.md, borderRightWidth: 1, borderRightColor: '#D3DBE8' },
   rightIcon: { marginLeft: spacing.sm },
-  disabled: { backgroundColor: palette.surfaceAlt, opacity: 0.7 },
-  errorBorder: { borderColor: palette.error },
+  disabled: { opacity: 0.7 },
+  errorBorder: { borderWidth: 1.5, borderColor: palette.error },
   errorText: { ...typography.caption, color: palette.error, marginTop: 4 },
   hint: { ...typography.caption, marginTop: 4 },
 });

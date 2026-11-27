@@ -1,14 +1,16 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { palette, radius, spacing } from '../theme';
+import { palette, spacing, NEU } from '../theme';
 
-export default function Card({ children, style, padded = true, elevated = true }) {
+// Neumorphic card: same colour as the page, lifted by a soft light/dark
+// shadow pair. `elevated={false}` gives a flat panel, `inset` a pressed well.
+export default function Card({ children, style, padded = true, elevated = true, inset = false }) {
   return (
     <View
       style={[
         styles.card,
         padded && styles.padded,
-        elevated && styles.elevated,
+        { boxShadow: inset ? NEU.inset : elevated ? NEU.raised : undefined },
         style,
       ]}
     >
@@ -20,16 +22,9 @@ export default function Card({ children, style, padded = true, elevated = true }
 const styles = StyleSheet.create({
   card: {
     backgroundColor: palette.surface,
-    borderRadius: radius.lg,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: palette.divider,
+    borderColor: 'rgba(255,255,255,0.6)',
   },
   padded: { padding: spacing.lg },
-  elevated: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
 });

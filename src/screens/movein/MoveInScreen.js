@@ -10,7 +10,7 @@ import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
 import ShiftingBookingSheet from '../../components/ShiftingBookingSheet';
 import UtilityRequestSheet from '../../components/UtilityRequestSheet';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatDate } from '../../utils/format';
 import { showToast } from '../../utils/toastConfig';
 import {
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md, padding: 4, marginBottom: spacing.md,
   },
   tab: { flex: 1, paddingVertical: 9, borderRadius: radius.sm, alignItems: 'center' },
-  tabActive: { backgroundColor: palette.surface, ...{ shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 } },
+  tabActive: { backgroundColor: palette.surface, boxShadow: NEU.raisedSm },
   tabText: { fontSize: 13, fontWeight: '600', color: palette.textMuted },
   tabTextActive: { color: palette.primary, fontWeight: '700' },
 

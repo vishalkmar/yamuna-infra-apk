@@ -6,7 +6,7 @@ import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
 import StatusChip from '../../components/StatusChip';
 import { CardSkeleton } from '../../components/Skeleton';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatDate } from '../../utils/format';
 import {
   loadTicket, replyTicket, rateTicket, bookAppointment, clearActive,
@@ -199,10 +199,10 @@ const styles = StyleSheet.create({
   input: {
     flex: 1, maxHeight: 120, minHeight: 44,
     backgroundColor: palette.background,
-    borderRadius: radius.md, borderWidth: 1, borderColor: palette.border,
+    borderRadius: radius.md,  
     paddingHorizontal: spacing.md, paddingVertical: 10,
     color: palette.text, fontSize: 14,
-    marginRight: spacing.sm,
+    marginRight: spacing.sm, boxShadow: NEU.raisedSm
   },
   sendBtn: {
     backgroundColor: palette.primary, borderRadius: radius.md,

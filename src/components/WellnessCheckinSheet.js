@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Input from './Input';
 import Button from './Button';
 import Stepper from './Stepper';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { addCheckin } from '../store/slices/companionSlice';
 import { showToast } from '../utils/toastConfig';
 
@@ -95,11 +95,11 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   close: { fontSize: 26, color: palette.textMuted },
   moodRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm },
-  mood: { width: 54, height: 54, borderRadius: radius.md, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, alignItems: 'center', justifyContent: 'center' },
+  mood: { width: 54, height: 54, borderRadius: radius.md,   backgroundColor: palette.surface, alignItems: 'center', justifyContent: 'center', boxShadow: NEU.raisedSm },
   moodActive: { backgroundColor: '#E0E7FF', borderColor: palette.primary },
   moodIcon: { fontSize: 26 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: 6 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, marginRight: spacing.sm, marginBottom: spacing.sm },
+  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill,   backgroundColor: palette.surface, marginRight: spacing.sm, marginBottom: spacing.sm, boxShadow: NEU.raisedSm },
   chipActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   chipText: { fontSize: 12, fontWeight: '600', color: palette.text },
   chipTextActive: { color: '#fff' },

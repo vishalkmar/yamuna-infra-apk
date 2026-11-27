@@ -5,8 +5,9 @@ import { palette, spacing, typography } from '../theme';
 export default function SectionHeader({ title, subtitle, actionLabel, onActionPress }) {
   return (
     <View style={styles.row}>
+      <View style={styles.bar} />
       <View style={styles.left}>
-        <Text style={typography.h3}>{title}</Text>
+        <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={typography.caption}>{subtitle}</Text> : null}
       </View>
       {actionLabel ? (
@@ -26,6 +27,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     marginTop: spacing.sm,
   },
+  bar: { width: 4, height: 22, borderRadius: 2, backgroundColor: palette.gold, marginRight: 10, alignSelf: 'flex-start', marginTop: 3 },
   left: { flex: 1, paddingRight: spacing.md },
+  title: { ...typography.h3, fontSize: 19, fontWeight: '800' },
   action: { color: palette.primary, fontWeight: '600', fontSize: 13 },
 });

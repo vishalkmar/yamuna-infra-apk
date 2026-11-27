@@ -10,7 +10,7 @@ import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
 import PreAuthGuestSheet from '../../components/PreAuthGuestSheet';
 import AmenityBookingSheet from '../../components/AmenityBookingSheet';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatDate } from '../../utils/format';
 import {
   loadAnnouncements, loadEvents, loadVisitors, loadAmenities, loadAmenityBookings,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
 
   tabBar: { flexDirection: 'row', backgroundColor: palette.surfaceAlt, borderRadius: radius.md, padding: 4, marginBottom: spacing.md },
   tab: { flex: 1, paddingVertical: 9, borderRadius: radius.sm, alignItems: 'center' },
-  tabActive: { backgroundColor: palette.surface, elevation: 1 },
+  tabActive: { backgroundColor: palette.surface, boxShadow: NEU.raisedSm },
   tabText: { fontSize: 13, fontWeight: '600', color: palette.textMuted },
   tabTextActive: { color: palette.primary, fontWeight: '700' },
 

@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { showToast } from '../utils/toastConfig';
 import { loadChat, sendChat, pushUserMessage } from '../store/slices/companionSlice';
 
@@ -95,11 +95,11 @@ export default function FloatingChatButton() {
 
 const styles = StyleSheet.create({
   fab: {
-    position: 'absolute', right: 16, bottom: 150,
+    position: 'absolute', right: 16, bottom: 186,
     width: 50, height: 50, borderRadius: 25,
-    backgroundColor: palette.primary,
+    backgroundColor: palette.primary, experimental_backgroundImage: NEU.navyGradient,
     alignItems: 'center', justifyContent: 'center',
-    elevation: 8, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
+    boxShadow: NEU.primary,
   },
   fabIcon: { fontSize: 24 },
 

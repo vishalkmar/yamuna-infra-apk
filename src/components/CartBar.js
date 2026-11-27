@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 
-import { palette, radius, spacing } from '../theme';
+import { palette, radius, spacing, NEU } from '../theme';
 import { formatINR } from '../utils/format';
 import { cartCount, cartTotal } from '../utils/cart';
 
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.primary, borderRadius: radius.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingVertical: 14,
-    elevation: 6, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
+    boxShadow: NEU.primary,
   },
   left: { color: '#fff', fontWeight: '700', fontSize: 14 },
   right: { color: '#fff', fontWeight: '800', fontSize: 14 },

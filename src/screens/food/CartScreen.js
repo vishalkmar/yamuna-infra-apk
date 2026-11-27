@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ScreenContainer from '../../components/ScreenContainer';
@@ -12,6 +12,7 @@ import { formatINR } from '../../utils/format';
 import { cartTotal, deliveryFee, grandTotal } from '../../utils/cart';
 import { incItem, decItem, removeItem, placeFoodOrder } from '../../store/slices/foodSlice';
 import { paymentApi } from '../../api/paymentApi';
+import SmartImage from '../../components/SmartImage';
 import { showToast } from '../../utils/toastConfig';
 
 export default function CartScreen({ navigation }) {
@@ -77,7 +78,7 @@ export default function CartScreen({ navigation }) {
       <Text style={[typography.h3, styles.title]}>Your cart</Text>
       {cart.map(c => (
         <Card key={c.itemId} style={styles.row}>
-          <Image source={{ uri: c.image }} style={styles.image} />
+          <SmartImage uri={c.image} style={styles.image} emoji="🍲" seed={c.name} />
           <View style={styles.info}>
             <Text style={styles.name}>{c.name}</Text>
             <Text style={styles.price}>{formatINR(c.price)} × {c.qty} = {formatINR(c.price * c.qty)}</Text>

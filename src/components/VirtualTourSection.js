@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, Modal, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { showToast } from '../utils/toastConfig';
 
 const ICONS = {
@@ -93,11 +93,11 @@ const styles = StyleSheet.create({
     width: '48.5%',
     backgroundColor: palette.surface,
     borderRadius: radius.lg,
-    borderWidth: 1, borderColor: palette.divider,
+     
     padding: spacing.md,
     marginBottom: spacing.sm,
     minHeight: 90,
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-start', boxShadow: NEU.raisedSm
   },
   icon: { fontSize: 26, marginBottom: 6 },
   label: { fontSize: 13, fontWeight: '600', color: palette.text },

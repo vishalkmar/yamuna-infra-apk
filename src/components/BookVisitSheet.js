@@ -10,7 +10,7 @@ import Button from './Button';
 import RadioGroup from './RadioGroup';
 import Stepper from './Stepper';
 import Dropdown from './Dropdown';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { loadSlots, bookVisit, rescheduleVisit, clearSlots } from '../store/slices/siteVisitSlice';
 import { validateVisitDate, minBookableDate } from '../utils/visitDate';
 import { showToast } from '../utils/toastConfig';
@@ -300,10 +300,10 @@ const styles = StyleSheet.create({
   slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: 6 },
   slotChip: {
     paddingHorizontal: 14, paddingVertical: 10,
-    borderRadius: radius.md, borderWidth: 1, borderColor: palette.border,
+    borderRadius: radius.md,  
     backgroundColor: palette.surface,
     marginRight: spacing.sm, marginBottom: spacing.sm,
-    minWidth: 100, alignItems: 'center',
+    minWidth: 100, alignItems: 'center', boxShadow: NEU.raisedSm
   },
   slotChipActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   slotChipFull: { backgroundColor: palette.surfaceAlt, opacity: 0.6 },

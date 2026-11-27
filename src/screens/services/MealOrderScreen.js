@@ -9,8 +9,9 @@ import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
 import CartBar from '../../components/CartBar';
 import MealOrderSheet from '../../components/MealOrderSheet';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatINR, formatDate } from '../../utils/format';
+import SmartImage from '../../components/SmartImage';
 import { loadFoodCategories, loadFoodOrders } from '../../store/slices/foodSlice';
 
 export default function MealOrderScreen({ navigation }) {
@@ -47,10 +48,10 @@ export default function MealOrderScreen({ navigation }) {
           <View style={styles.grid}>
             {categories.map(c => (
               <TouchableOpacity key={c.code} style={styles.tile} activeOpacity={0.8} onPress={() => openCategory(c)}>
-                <Image source={{ uri: c.image }} style={styles.tileImage} />
+                <SmartImage uri={c.image} style={styles.tileImage} emoji={c.icon || '🍽️'} seed={c.code} />
                 <View style={styles.tileBody}>
                   <Text style={styles.tileName}>{c.icon} {c.name}</Text>
-                  <Text style={styles.tileMeta}>{c.itemCount} items ›</Text>
+                  <Text style={styles.tileMeta}>{c.itemCount != null ? `${c.itemCount} item${c.itemCount === 1 ? '' : 's'}` : 'View menu'} ›</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: { marginBottom: spacing.sm, marginTop: spacing.sm },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  tile: { width: '48%', backgroundColor: palette.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: palette.divider, overflow: 'hidden', marginBottom: spacing.sm },
+  tile: { width: '48%', backgroundColor: palette.surface, borderRadius: radius.lg,   overflow: 'hidden', marginBottom: spacing.sm, boxShadow: NEU.raisedSm },
   tileImage: { width: '100%', height: 96, backgroundColor: palette.surfaceAlt },
   tileBody: { padding: spacing.sm },
   tileName: { fontSize: 14, fontWeight: '700', color: palette.text },

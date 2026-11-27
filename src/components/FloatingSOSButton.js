@@ -5,7 +5,7 @@ import { activateSos, loadContacts } from '../store/slices/sosSlice';
 import { dispatchSos } from '../services/sos';
 import { playSosAlarm } from '../services/notifications';
 import { showToast } from '../utils/toastConfig';
-import { radius } from '../theme';
+import { radius, NEU } from '../theme';
 
 const HOLD_MS = 3000;
 
@@ -81,18 +81,16 @@ const styles = StyleSheet.create({
   wrap: {
     position: 'absolute',
     right: 16,
-    bottom: 90,
+    bottom: 124,
     width: 50,
     height: 50,
     borderRadius: 25,
     backgroundColor: '#DC2626',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    boxShadow: NEU.danger,
+    borderWidth: 3,
+    borderColor: '#FFD4D4',
   },
   label: { color: '#fff', fontSize: 13, fontWeight: '900', letterSpacing: 0.5 },
   hint: { color: '#FECACA', fontSize: 7, fontWeight: '700', marginTop: 1 },

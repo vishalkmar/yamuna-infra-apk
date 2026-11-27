@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 
 export default function RadioGroup({ label, options = [], value, onChange, error, direction = 'row' }) {
   return (
@@ -40,14 +40,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: palette.border,
+    borderRadius: 18,
     backgroundColor: palette.surface,
+    boxShadow: NEU.raisedSm,
     marginRight: spacing.sm,
     marginBottom: spacing.sm,
   },
-  optionActive: { borderColor: palette.primary, backgroundColor: '#EEF2FF' },
+  // Selected option is "pressed in".
+  optionActive: { boxShadow: NEU.inset, backgroundColor: '#E8EFFB' },
   dot: {
     width: 18, height: 18, borderRadius: 9,
     borderWidth: 1.5, borderColor: palette.border,

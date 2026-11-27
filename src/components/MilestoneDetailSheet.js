@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, ScrollView, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { formatDate } from '../utils/format';
 import StatusChip from './StatusChip';
 import { loadMilestone, clearSelectedMilestone } from '../store/slices/projectSlice';
@@ -142,10 +142,10 @@ const styles = StyleSheet.create({
 
   entryCard: {
     backgroundColor: palette.surface,
-    borderWidth: 1, borderColor: palette.divider,
+     
     borderRadius: radius.md,
     padding: spacing.md,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm, boxShadow: NEU.raisedSm
   },
   entryHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   entryTitle: { fontSize: 15, fontWeight: '700', color: palette.text, flex: 1, marginRight: spacing.sm },

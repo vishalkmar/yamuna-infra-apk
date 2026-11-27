@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { HeaderShownContext } from '@react-navigation/elements';
 import { palette, spacing } from '../theme';
 
 export default function ScreenContainer({
@@ -12,9 +13,13 @@ export default function ScreenContainer({
   edges = ['top', 'left', 'right'],
   style,
 }) {
+  // Inner screens already get the status-bar inset from the neumorphic stack
+  // header; only header-less screens (home tabs, auth) need the top edge.
+  const headerShown = useContext(HeaderShownContext);
+  const safeEdges = headerShown ? edges.filter(e => e !== 'top') : edges;
   const inner = padded ? <View style={styles.padded}>{children}</View> : children;
   return (
-    <SafeAreaView style={styles.safe} edges={edges}>
+    <SafeAreaView style={styles.safe} edges={safeEdges}>
       {scroll ? (
         <ScrollView
           contentContainerStyle={[styles.scrollContent, style]}
@@ -37,6 +42,7 @@ export default function ScreenContainer({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.background },
   flex: { flex: 1 },
-  scrollContent: { paddingBottom: spacing.xl },
+  // Room for the floating neumorphic tab bar.
+  scrollContent: { paddingBottom: 120 },
   padded: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
 });

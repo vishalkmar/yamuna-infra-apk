@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { palette, radius, spacing, typography } from '../theme';
+import SmartImage from './SmartImage';
 import { formatINR } from '../utils/format';
 
 // Full detail view for a food item — opens when a menu card is tapped. Shows
@@ -16,7 +17,7 @@ export default function FoodItemDetailSheet({ item, qty = 0, onClose, onAdd, onI
             <TouchableOpacity onPress={onClose} hitSlop={10} style={styles.closeBtn}><Text style={styles.close}>×</Text></TouchableOpacity>
           </View>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {item.image ? <Image source={{ uri: item.image }} style={styles.image} resizeMode="cover" /> : null}
+            <SmartImage uri={item.image} style={styles.image} emoji="🍲" seed={item.name} />
 
             <View style={styles.rowTop}>
               <Text style={styles.veg}>{item.veg ? '🟢' : '🔴'}</Text>

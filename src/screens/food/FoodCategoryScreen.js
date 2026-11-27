@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ScreenContainer from '../../components/ScreenContainer';
@@ -11,6 +11,7 @@ import FoodItemDetailSheet from '../../components/FoodItemDetailSheet';
 import { palette, radius, spacing, typography } from '../../theme';
 import { formatINR } from '../../utils/format';
 import { qtyOf } from '../../utils/cart';
+import SmartImage from '../../components/SmartImage';
 import { loadFoodItems, addToCart, incItem, decItem } from '../../store/slices/foodSlice';
 
 export default function FoodCategoryScreen({ route, navigation }) {
@@ -36,7 +37,7 @@ export default function FoodCategoryScreen({ route, navigation }) {
           return (
             <Card key={item.id} style={styles.card}>
               <TouchableOpacity onPress={() => setDetailItem(item)} activeOpacity={0.85}>
-                <Image source={{ uri: item.image }} style={styles.image} />
+                <SmartImage uri={item.image} style={styles.image} emoji="🍲" seed={item.name} />
               </TouchableOpacity>
               <View style={styles.info}>
                 <TouchableOpacity onPress={() => setDetailItem(item)} activeOpacity={0.7}>

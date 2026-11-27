@@ -7,7 +7,7 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
-import { palette, radius, spacing, typography, FONT } from '../../theme';
+import { palette, radius, spacing, typography, FONT, NEU } from '../../theme';
 import { formatDate } from '../../utils/format';
 import { docApi } from '../../api/docApi';
 import { paymentApi } from '../../api/paymentApi';
@@ -187,9 +187,9 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: 14, paddingVertical: 7,
     borderRadius: radius.pill,
-    borderWidth: 1, borderColor: palette.border,
+     
     backgroundColor: palette.surface,
-    marginRight: 8,
+    marginRight: 8, boxShadow: NEU.raisedSm
   },
   chipActive: { borderColor: palette.primary, backgroundColor: '#EEF2FF' },
   chipText: { fontFamily: FONT, fontSize: 12, color: palette.textMuted, fontWeight: '600' },

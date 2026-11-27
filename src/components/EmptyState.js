@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { palette, spacing, typography } from '../theme';
+import { palette, spacing, typography, NEU } from '../theme';
 
 export default function EmptyState({ icon = '📭', title, message, children }) {
   return (
     <View style={styles.wrap}>
-      <Text style={styles.icon}>{icon}</Text>
+      <View style={styles.iconWell}><Text style={styles.icon}>{icon}</Text></View>
       {title ? <Text style={styles.title}>{title}</Text> : null}
       {message ? <Text style={styles.message}>{message}</Text> : null}
       {children}
@@ -20,7 +20,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
     paddingHorizontal: spacing.lg,
   },
-  icon: { fontSize: 42, marginBottom: spacing.sm },
+  iconWell: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.surface, boxShadow: NEU.raised, marginBottom: spacing.md },
+  icon: { fontSize: 38 },
   title: { ...typography.h3, textAlign: 'center', marginBottom: 4 },
   message: { ...typography.bodyMuted, textAlign: 'center', maxWidth: 260 },
 });

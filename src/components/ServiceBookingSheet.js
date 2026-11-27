@@ -10,7 +10,7 @@ import Button from './Button';
 import RadioGroup from './RadioGroup';
 import Stepper from './Stepper';
 import CashfreeCheckout from './CashfreeCheckout';
-import { palette, radius, spacing, typography } from '../theme';
+import { palette, radius, spacing, typography, NEU } from '../theme';
 import { bookService } from '../store/slices/servicesSlice';
 import { paymentApi } from '../api/paymentApi';
 import { formatINR } from '../utils/format';
@@ -298,8 +298,8 @@ const styles = StyleSheet.create({
   mealRow: { flexDirection: 'row', gap: spacing.sm, marginTop: 6, marginBottom: spacing.md },
   mealChip: {
     flex: 1, paddingVertical: 10, borderRadius: radius.md,
-    borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, alignItems: 'center',
-    marginRight: spacing.sm,
+      backgroundColor: palette.surface, alignItems: 'center',
+    marginRight: spacing.sm, boxShadow: NEU.raisedSm
   },
   mealChipActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   mealText: { fontSize: 13, fontWeight: '600', color: palette.text },

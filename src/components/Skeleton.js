@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { palette, radius, spacing } from '../theme';
+import { palette, radius, spacing, NEU } from '../theme';
 
 // Minimal static skeleton block. (No animation — keeps zero native deps.)
 export function SkeletonBlock({ height = 16, width = '100%', style }) {
@@ -33,8 +33,7 @@ export function CardSkeleton() {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.divider,
+    boxShadow: NEU.raised,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,

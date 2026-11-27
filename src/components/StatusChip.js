@@ -1,14 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { palette, radius } from '../theme';
+import { palette, radius, NEU } from '../theme';
 
 const variantMap = {
-  success: { bg: '#DCFCE7', fg: '#15803D' },
-  error: { bg: '#FEE2E2', fg: '#B91C1C' },
-  warning: { bg: '#FEF3C7', fg: '#B45309' },
-  info: { bg: '#DBEAFE', fg: '#1D4ED8' },
-  neutral: { bg: palette.surfaceAlt, fg: palette.textMuted },
-  primary: { bg: '#E0E7FF', fg: palette.primary },
+  success: { bg: '#DCF5E7', fg: '#16794A' },
+  error: { bg: '#FDE4E4', fg: '#C62828' },
+  warning: { bg: '#FDF0DA', fg: '#B26A00' },
+  info: { bg: '#E3ECFB', fg: '#1E3A78' },
+  neutral: { bg: palette.surface, fg: palette.textMuted },
+  primary: { bg: '#E3ECFB', fg: palette.primary },
 };
 
 export default function StatusChip({ label, variant = 'neutral', style }) {
@@ -24,8 +24,9 @@ const styles = StyleSheet.create({
   chip: {
     alignSelf: 'flex-start',
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: radius.pill,
+    boxShadow: NEU.raisedSm,
   },
   label: { fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
 });

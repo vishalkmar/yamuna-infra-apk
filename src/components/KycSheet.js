@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Input from './Input';
 import Button from './Button';
 import Dropdown from './Dropdown';
-import { palette, spacing, typography } from '../theme';
+import { palette, spacing, typography, NEU } from '../theme';
 import { submitKyc } from '../store/slices/profileSlice';
 import { showToast } from '../utils/toastConfig';
 
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   close: { fontSize: 26, color: palette.textMuted },
   termsRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm },
-  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: palette.border, alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm },
+  checkbox: { width: 22, height: 22, borderRadius: 6,   alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm, boxShadow: NEU.raisedSm },
   checkboxOn: { backgroundColor: palette.primary, borderColor: palette.primary },
   checkmark: { color: '#fff', fontSize: 14, fontWeight: '800' },
   termsText: { flex: 1, fontSize: 13, color: palette.text },

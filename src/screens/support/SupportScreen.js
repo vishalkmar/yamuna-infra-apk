@@ -9,7 +9,7 @@ import StatusChip from '../../components/StatusChip';
 import EmptyState from '../../components/EmptyState';
 import { CardSkeleton } from '../../components/Skeleton';
 import RaiseTicketSheet from '../../components/RaiseTicketSheet';
-import { palette, radius, spacing, typography } from '../../theme';
+import { palette, radius, spacing, typography, NEU } from '../../theme';
 import { formatDate } from '../../utils/format';
 import { loadTickets } from '../../store/slices/supportSlice';
 
@@ -143,9 +143,9 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: 14, paddingVertical: 7,
     borderRadius: radius.pill,
-    borderWidth: 1, borderColor: palette.border,
+     
     backgroundColor: palette.surface,
-    marginRight: spacing.sm,
+    marginRight: spacing.sm, boxShadow: NEU.raisedSm
   },
   chipActive: { backgroundColor: palette.primary, borderColor: palette.primary },
   chipText: { fontSize: 13, fontWeight: '600', color: palette.textMuted },

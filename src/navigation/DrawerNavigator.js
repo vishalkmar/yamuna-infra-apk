@@ -28,7 +28,7 @@ function DrawerContent({ navigation }) {
 
   const navigateTo = item => {
     if (item.screen) {
-      navigation.navigate('Tabs', { screen: item.tab, params: { screen: item.screen } });
+      navigation.navigate('Tabs', { screen: item.tab, params: { screen: item.screen, initial: false } });
     } else {
       navigation.navigate('Tabs', { screen: item.tab });
     }
