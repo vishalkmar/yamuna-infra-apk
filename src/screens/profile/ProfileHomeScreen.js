@@ -1,4 +1,6 @@
 import React from 'react';
+import useUnreadCount from '../../hooks/useUnreadCount';
+import useChatUnread from '../../hooks/useChatUnread';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { useDispatch, useSelector } from 'react-redux';
@@ -10,13 +12,15 @@ import { palette, NEU } from '../../theme';
 const MENU = [
   { key: 'ProfileDetails', title: 'Profile Details', sub: 'View & update your info', art: ART.pmDetails },
   { key: 'Rewards', title: 'Rewards & Referrals', sub: 'Earn benefits & invite neighbors', art: ART.pmRewards },
-  { key: 'AICompanion', title: 'Vrindavan Companion', sub: 'Your smart community assistant', art: ART.pmAi },
+  { key: 'AICompanion', title: 'Reminders', sub: 'Alarms for medicine, payments, darshan', art: ART.pmAi },
   { key: 'NotificationsScreen', title: 'Notifications', sub: 'Manage alerts & updates', art: ART.pmNotify },
   { key: 'Settings', title: 'Settings', sub: 'App, privacy & preferences', art: ART.pmSettings },
   { key: 'help', title: 'Help & Support', sub: 'Get help, raise a request', art: ART.pmHelp, to: ['HomeTab', 'Support'] },
 ];
 
 export default function ProfileHome({ navigation }) {
+  const unread = useUnreadCount();
+  const chatUnread = useChatUnread();
   const user = useSelector(s => s.auth.user);
   const photo = useSelector(s => s.profile?.personal?.photo);
   const dispatch = useDispatch();
@@ -30,8 +34,8 @@ export default function ProfileHome({ navigation }) {
         subtitle="RESIDENT PORTAL"
         right={(
           <>
-            <IconButton icon="bell" dot onPress={() => navigation.navigate('NotificationsScreen')} />
-            <IconButton icon="headphones" onPress={() => navigation.navigate('HomeTab', { screen: 'Support', initial: false })} />
+            <IconButton icon="bell" dot={unread} onPress={() => navigation.navigate('NotificationsScreen')} />
+            <IconButton icon="message-circle" dot={chatUnread} onPress={() => navigation.navigate('HomeTab', { screen: 'Support', initial: false })} />
           </>
         )}
       />

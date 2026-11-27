@@ -23,6 +23,14 @@ export const companionApi = {
     const { data } = await api.post('/companion/reminders', payload);
     return data.data;
   },
+  updateReminder: async (id, payload) => {
+    const { data } = await api.put(`/companion/reminders/${id}`, payload);
+    return data.data;
+  },
+  toggleReminder: async (id, enabled) => {
+    const { data } = await api.patch(`/companion/reminders/${id}`, { enabled });
+    return data.data;
+  },
   deleteReminder: async id => {
     if (ENV.USE_MOCK_API) return mockApi.deleteReminder(id);
     const { data } = await api.delete(`/companion/reminders/${id}`);

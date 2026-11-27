@@ -41,8 +41,9 @@ export const paymentApi = {
 
   // One-off payment for a food order / cab ride / home service (Cashfree).
   // purpose: 'food' | 'ride' | 'service'. Rides are priced server-side.
-  checkout: async ({ purpose, amount, refId, remarks }) => {
-    const { data } = await api.post('/payment/quick/initiate', { purpose, amount, refId: refId ?? null, remarks: remarks || '' });
+  // items (optional): [{ name, qty, price, amount }] — listed on the emailed receipt.
+  checkout: async ({ purpose, amount, refId, remarks, items }) => {
+    const { data } = await api.post('/payment/quick/initiate', { purpose, amount, refId: refId ?? null, remarks: remarks || '', ...(items && items.length ? { items } : {}) });
     return data.data;
   },
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ScreenContainer from '../../components/ScreenContainer';
@@ -8,33 +8,13 @@ import Dropdown from '../../components/Dropdown';
 import { palette, spacing, typography } from '../../theme';
 import { LANGUAGE_LABEL } from '../../utils/profile';
 import { loadSettings, saveSettings } from '../../store/slices/settingsSlice';
+import { setLanguage } from '../../i18n';
 
 const pkg = require('../../../package.json');
 
 const LANGUAGES = Object.entries(LANGUAGE_LABEL).map(([value, label]) => ({ value, label }));
-const NOTIF_TYPES = [
-  { key: 'announcements', label: 'Community announcements' },
-  { key: 'payments', label: 'Payments & dues' },
-  { key: 'services', label: 'Service updates' },
-  { key: 'reminders', label: 'Reminders' },
-];
 const TERMS_URL = 'https://yamunainfra.example.com/terms';
 const PRIVACY_URL = 'https://yamunainfra.example.com/privacy';
-
-function ToggleRow({ label, value, onValueChange, disabled }) {
-  return (
-    <View style={[styles.row, disabled && styles.rowDisabled]}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Switch
-        value={!!value}
-        onValueChange={onValueChange}
-        disabled={disabled}
-        trackColor={{ true: palette.primary, false: palette.border }}
-        thumbColor="#fff"
-      />
-    </View>
-  );
-}
 
 function LinkRow({ label, value, onPress }) {
   return (
@@ -47,51 +27,25 @@ function LinkRow({ label, value, onPress }) {
 
 export default function SettingsScreen() {
   const dispatch = useDispatch();
-  const { language, notifications, privacy, loading } = useSelector(s => s.settings);
+  const { language, loading } = useSelector(s => s.settings);
 
   const reload = useCallback(() => { dispatch(loadSettings()); }, [dispatch]);
   useEffect(() => { reload(); }, [reload]);
 
   const patch = payload => dispatch(saveSettings(payload));
-  const setNotif = (key, val) => patch({ notifications: { [key]: val } });
-  const setPrivacy = (key, val) => patch({ privacy: { [key]: val } });
 
   const openSystemSettings = () => {
     Linking.openSettings().catch(() => {});
   };
   const openUrl = url => Linking.openURL(url).catch(() => {});
 
-  const masterOff = !notifications?.master;
-
   return (
     <ScreenContainer refreshing={loading} onRefresh={reload}>
       {/* Language */}
       <Text style={[typography.h3, styles.section]}>Language</Text>
       <Card style={styles.card}>
-        <Dropdown label="App language" value={language} options={LANGUAGES} onChange={v => patch({ language: v })} />
-        <Text style={typography.caption}>Affects labels across the app. (हिन्दी rollout in progress.)</Text>
-      </Card>
-
-      {/* Notifications */}
-      <Text style={[typography.h3, styles.section]}>Notifications</Text>
-      <Card padded={false} style={styles.card}>
-        <View style={styles.padded}>
-          <ToggleRow label="All notifications" value={notifications?.master} onValueChange={v => setNotif('master', v)} />
-          <View style={styles.divider} />
-          {NOTIF_TYPES.map(t => (
-            <ToggleRow key={t.key} label={t.label} value={notifications?.[t.key]} onValueChange={v => setNotif(t.key, v)} disabled={masterOff} />
-          ))}
-        </View>
-      </Card>
-
-      {/* Privacy */}
-      <Text style={[typography.h3, styles.section]}>Privacy</Text>
-      <Card padded={false} style={styles.card}>
-        <View style={styles.padded}>
-          <ToggleRow label="Show my profile to neighbours" value={privacy?.profileVisible} onValueChange={v => setPrivacy('profileVisible', v)} />
-          <ToggleRow label="Share usage analytics" value={privacy?.analytics} onValueChange={v => setPrivacy('analytics', v)} />
-          <ToggleRow label="Biometric app lock" value={privacy?.biometricLock} onValueChange={v => setPrivacy('biometricLock', v)} />
-        </View>
+        <Dropdown label="App language" value={language} options={LANGUAGES} onChange={v => { setLanguage(v); patch({ language: v }); }} />
+        <Text style={typography.caption}>Changes the whole app to the selected language · पूरी ऐप चुनी गई भाषा में बदल जाती है</Text>
       </Card>
 
       {/* Access / permissions */}

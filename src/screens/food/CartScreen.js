@@ -30,7 +30,10 @@ export default function CartScreen({ navigation }) {
   const startPay = async () => {
     try {
       setPaying(true);
-      const ord = await paymentApi.checkout({ purpose: 'food', amount: total, remarks: 'Food order' });
+      const items = cart.map(c => ({ name: c.name, qty: c.qty, price: c.price, amount: (c.price || 0) * (c.qty || 0) }));
+      if (fee > 0) items.push({ name: 'Delivery fee', qty: 1, price: fee, amount: fee });
+      const remarks = ('Food: ' + cart.map(c => c.qty + '× ' + c.name).join(', ')).slice(0, 190);
+      const ord = await paymentApi.checkout({ purpose: 'food', amount: total, remarks, items });
       setPaying(false);
       setOrder(ord);
       setCheckoutOpen(true);

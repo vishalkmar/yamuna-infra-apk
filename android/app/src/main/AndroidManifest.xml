@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Only Android 9 and older need this to save into Downloads. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
     <!-- Reminders 2.0 — local scheduled notifications / device alarms (Module 29) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -8,6 +10,9 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Reminder alarms: ring full-screen over the lock screen -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- SOS Management — share live location with emergency persons (Module 31) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -34,5 +39,23 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+      <!-- Reminder alarm clock (AlarmKit.kt) -->
+      <receiver android:name=".AlarmReceiver" android:exported="false" />
+      <receiver android:name=".AlarmBootReceiver" android:exported="true">
+        <intent-filter>
+          <action android:name="android.intent.action.BOOT_COMPLETED" />
+          <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+          <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+        </intent-filter>
+      </receiver>
+      <activity
+        android:name=".AlarmActivity"
+        android:exported="false"
+        android:showWhenLocked="true"
+        android:turnScreenOn="true"
+        android:excludeFromRecents="true"
+        android:launchMode="singleInstance"
+        android:taskAffinity="com.infra.alarm"
+        android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
     </application>
 </manifest>

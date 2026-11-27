@@ -84,7 +84,9 @@ export function IconButton({ icon, onPress, size = 48, dot = false, color = pale
     <TouchableOpacity onPress={onPress} activeOpacity={0.8} hitSlop={6} style={style}>
       <Neu variant="raisedSm" radius={size / 2} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
         <Feather name={icon} size={Math.round(size * 0.44)} color={color} />
-        {dot ? <View style={styles.dot} /> : null}
+        {typeof dot === 'number'
+          ? (dot > 0 ? <View style={styles.badge}><Text style={styles.badgeText}>{dot > 99 ? '99+' : dot}</Text></View> : null)
+          : dot ? <View style={styles.dot} /> : null}
       </Neu>
     </TouchableOpacity>
   );
@@ -150,6 +152,8 @@ export function Pill({ label, icon, tone = 'blue', style }) {
 }
 
 const styles = StyleSheet.create({
+  badge: { position: 'absolute', top: 3, right: 2, minWidth: 19, height: 19, borderRadius: 10, paddingHorizontal: 4, backgroundColor: '#E5484D', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: palette.surface },
+  badgeText: { color: '#fff', fontSize: 10.5, fontWeight: '800' },
   dot: { position: 'absolute', top: 9, right: 10, width: 9, height: 9, borderRadius: 5, backgroundColor: '#F28C28', borderWidth: 1.5, borderColor: palette.surface },
   brandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   logoTile: { width: 56, height: 56, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },

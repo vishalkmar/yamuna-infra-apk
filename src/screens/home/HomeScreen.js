@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import useUnreadCount from '../../hooks/useUnreadCount';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { useSelector, useDispatch } from 'react-redux';
@@ -43,6 +44,7 @@ const SERVICES = [
 ];
 
 export default function HomeScreen({ navigation }) {
+  const unread = useUnreadCount();
   const dispatch = useDispatch();
   const user = useSelector(s => s.auth.user);
   const { property, properties, selectedPropertyId, progressPct } = useSelector(s => s.project);
@@ -70,7 +72,7 @@ export default function HomeScreen({ navigation }) {
         subtitle="RESIDENT PORTAL"
         right={(
           <>
-            <IconButton icon="bell" dot onPress={() => navigation.navigate('NotificationsScreen')} />
+            <IconButton icon="bell" dot={unread} onPress={() => navigation.navigate('NotificationsScreen')} />
             <IconButton icon="user" onPress={() => navigation.navigate('ProfileTab')} />
           </>
         )}

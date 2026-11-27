@@ -52,3 +52,22 @@ export function nextOccurrenceMs(timeLabel, now = new Date()) {
   if (d.getTime() <= now.getTime()) d.setDate(d.getDate() + 1);
   return d.getTime();
 }
+
+// ---- alarm-clock repeat rules ----
+export const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export const REPEATS = [
+  { value: 'once', label: 'Once' },
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekdays', label: 'Mon–Fri' },
+  { value: 'weekends', label: 'Weekends' },
+  { value: 'custom', label: 'Custom days' },
+];
+export function repeatSummary(r) {
+  if (!r) return '';
+  if (r.repeat === 'once') return r.date ? `Once on ${r.date}` : 'Once';
+  if (r.repeat === 'weekdays') return 'Mon–Fri';
+  if (r.repeat === 'weekends') return 'Sat & Sun';
+  const days = r.days || [];
+  if (r.repeat === 'custom' && days.length && days.length < 7) return days.map(d => DAY_SHORT[d]).join(', ');
+  return 'Every day';
+}

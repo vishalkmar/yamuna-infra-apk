@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import useChatOpen from '../hooks/useChatOpen';
 import {
   View, Text, StyleSheet, TouchableOpacity, Modal, TextInput,
   ScrollView, KeyboardAvoidingView, Platform,
@@ -12,6 +13,7 @@ import { loadChat, sendChat, pushUserMessage } from '../store/slices/companionSl
 // Global floating chatbot (overlay), sits beside the SOS button. Opens the
 // Vrindavan Companion chat in a modal so it is reachable from anywhere.
 export default function FloatingChatButton() {
+  const chatOpen = useChatOpen();
   const dispatch = useDispatch();
   const isLoggedIn = useSelector(s => s.auth.isLoggedIn);
   const { messages, chatBusy } = useSelector(s => s.companion);
@@ -36,7 +38,7 @@ export default function FloatingChatButton() {
     catch (e) { showToast('error', 'Chat failed', String(e)); }
   };
 
-  if (!isLoggedIn) return null;
+  if (!isLoggedIn || chatOpen) return null;
 
   return (
     <>

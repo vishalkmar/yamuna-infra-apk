@@ -132,14 +132,67 @@ export async function cancelReminder(id) {
 
 // Cancel every scheduled reminder and re-schedule the current active set.
 // Called whenever the reminder list changes (add / remove / load).
+// Personal reminders ring as a real ALARM via the native YIAlarm module
+// (exact time, app closed, after reboot, full-screen over the lock screen).
+// Falls back to notifee on builds without it. Only reminder alarms are
+// touched — payment due reminders and other notifications stay scheduled.
+const alarm = () => require('react-native').NativeModules.YIAlarm;
+// One native alarm per (reminder, time): rem-<id>-<n>.
+function alarmsFor(r) {
+  const times = r.times && r.times.length ? r.times : [r.timeLabel || '08:00'];
+  const all7 = !r.days || r.days.length === 7;
+  const days = r.repeat === 'once' || r.repeat === 'daily' || all7 ? '' : r.days.join(',');
+  return times.map((t, i) => {
+    const [h, m] = String(t).split(':').map(Number);
+    let date = '';
+    if (r.repeat === 'once') {
+      if (r.date) date = r.date;
+      else {
+        // "once" without a date → the next time this clock time comes round
+        const d = new Date(); d.setHours(h, m, 0, 0);
+        if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+        date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+    }
+    return { id: `rem-${r.id}-${i}`, h: h || 0, m: m || 0, days, date };
+  });
+}
+
 export async function rescheduleAll(reminders = []) {
+  await ensureNotifPermission();
+  const on = reminders.filter(r => r && r.active !== false && r.enabled !== false);
+  const A = alarm();
+  if (A) {
+    try {
+      const plan = on.flatMap(r => alarmsFor(r).map(a => ({ ...a, r })));
+      await A.sync(plan.map(a => a.id)); // drops alarms of deleted / switched-off reminders
+      for (const a of plan) {
+        const meta = categoryMeta(a.r.category);
+        await A.schedule(a.id, a.h, a.m, `${meta.icon} ${a.r.title || a.r.medicine || 'Reminder'}`, a.r.note || a.r.dosage || meta.label, a.days, a.date);
+      }
+    } catch (e) { /* best effort */ }
+    return;
+  }
   const mod = lib();
   if (!mod) return;
-  await ensureNotifPermission();
-  try { await mod.default.cancelTriggerNotifications(); } catch (e) { /* noop */ }
-  for (const r of reminders) {
-    if (r && r.active !== false) {
-      await scheduleReminder(r);
-    }
-  }
+  for (const r of on) await scheduleReminder(r);
 }
+
+export async function cancelReminderAlarm(id) {
+  const A = alarm();
+  if (A) {
+    try {
+      const list = await A.list();
+      await Promise.all(list.filter(x => x.id === `rem-${id}` || x.id.startsWith(`rem-${id}-`)).map(x => A.cancel(x.id)));
+    } catch (e) { /* noop */ }
+  }
+  await cancelReminder(id);
+}
+
+export async function exactAlarmAllowed() {
+  const A = alarm();
+  if (!A) return true;
+  try { return await A.canScheduleExact(); } catch (e) { return true; }
+}
+export function openExactAlarmSettings() { const A = alarm(); return A ? A.openExactAlarmSettings() : null; }
+export function testAlarm(title) { const A = alarm(); return A ? A.test(title || '⏰ Test reminder') : null; }

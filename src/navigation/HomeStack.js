@@ -8,7 +8,7 @@ import DocumentRepositoryScreen from '../screens/documents/DocumentRepositoryScr
 import PdfViewerScreen from '../screens/documents/PdfViewerScreen';
 import ConstructionTrackerScreen from '../screens/project/ConstructionTrackerScreen';
 import SiteVisitScreen from '../screens/sitevisit/SiteVisitScreen';
-import SupportScreen from '../screens/support/SupportScreen';
+import SupportChatScreen from '../screens/support/SupportChatScreen';
 import TicketDetailScreen from '../screens/support/TicketDetailScreen';
 import PossessionDashboardScreen from '../screens/possession/PossessionDashboardScreen';
 import SnagScreen from '../screens/snag/SnagScreen';
@@ -32,7 +32,7 @@ export default function HomeStack() {
       <Stack.Screen name="PdfViewer" component={PdfViewerScreen} options={{ title: 'Document' }} />
       <Stack.Screen name="ConstructionTracker" component={ConstructionTrackerScreen} options={{ title: 'Construction Progress' }} />
       <Stack.Screen name="SiteVisit" component={SiteVisitScreen} options={{ title: 'Site Overview' }} />
-      <Stack.Screen name="Support" component={SupportScreen} options={{ title: 'Support' }} />
+      <Stack.Screen name="Support" component={SupportChatScreen} options={{ title: 'Support Chat' }} />
       <Stack.Screen name="TicketDetail" component={TicketDetailScreen} options={{ title: 'Ticket' }} />
       <Stack.Screen name="PossessionDashboard" component={PossessionDashboardScreen} options={{ title: 'Possession' }} />
       <Stack.Screen name="SnagReport" component={SnagScreen} options={{ title: 'Home Inspection & Snags' }} />

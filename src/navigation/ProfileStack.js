@@ -19,7 +19,7 @@ export default function ProfileStack() {
       <Stack.Screen name="ProfileHome" component={ProfileHome} options={{ title: 'Profile', headerShown: false }} />
       <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} options={{ title: 'Profile Details', headerShown: false }} />
       <Stack.Screen name="Rewards" component={RewardsScreen} options={{ title: 'Rewards' }} />
-      <Stack.Screen name="AICompanion" component={AICompanionScreen} options={{ title: 'Vrindavan Companion' }} />
+      <Stack.Screen name="AICompanion" component={AICompanionScreen} options={{ title: 'Reminders' }} />
       <Stack.Screen name="NotificationsScreen" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
     </Stack.Navigator>

@@ -3,13 +3,16 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette, NEU, FONT } from '../theme';
+import useChatOpen from '../hooks/useChatOpen';
 
 // Floating neumorphic tab bar: a raised pill; the active tab is a navy
 // gradient capsule with a gold glow underneath (as in the mockups).
-const ICONS = { HomeTab: 'home', ResidentTab: 'grid', CommunityTab: 'users', ProfileTab: 'user' };
+const ICONS = { HomeTab: 'home', ResidentTab: 'grid', CommunityTab: 'users', AssistantTab: 'message-circle', ProfileTab: 'user' };
 
 export default function NeuTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
+  const chatOpen = useChatOpen();
+  if (chatOpen) return null;
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       <View style={styles.bar}>
@@ -45,20 +48,20 @@ export default function NeuTabBar({ state, descriptors, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 14 },
+  wrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 10 },
   bar: {
-    flexDirection: 'row', alignItems: 'center', height: 74, borderRadius: 37, paddingHorizontal: 8,
+    flexDirection: 'row', alignItems: 'center', height: 74, borderRadius: 37, paddingHorizontal: 4,
     backgroundColor: palette.surface, boxShadow: NEU.raisedLg, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)',
   },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   idle: { alignItems: 'center', justifyContent: 'center', paddingVertical: 6 },
-  label: { fontFamily: FONT, fontSize: 12, fontWeight: '600', color: palette.navy, marginTop: 3 },
+  label: { fontFamily: FONT, fontSize: 11, fontWeight: '600', color: palette.navy, marginTop: 3 },
   activeOuter: { borderRadius: 26, boxShadow: NEU.glowGold },
   active: {
-    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 9, minWidth: 84,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8, paddingVertical: 9, minWidth: 62,
     borderRadius: 26, backgroundColor: palette.primary, experimental_backgroundImage: NEU.navyGradient,
   },
-  activeLabel: { fontFamily: FONT, fontSize: 12, fontWeight: '700', color: '#fff', marginTop: 3 },
+  activeLabel: { fontFamily: FONT, fontSize: 11, fontWeight: '700', color: '#fff', marginTop: 3 },
 });
 
 // Space screens must leave at the bottom so content isn't hidden by the bar.

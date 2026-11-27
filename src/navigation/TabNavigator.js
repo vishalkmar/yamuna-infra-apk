@@ -6,6 +6,7 @@ import HomeStack from './HomeStack';
 import ResidentStack from './ResidentStack';
 import CommunityStack from './CommunityStack';
 import ProfileStack from './ProfileStack';
+import AssistantScreen from '../screens/assistant/AssistantScreen';
 import NeuTabBar from './NeuTabBar';
 import { palette } from '../theme';
 
@@ -58,6 +59,7 @@ export default function TabNavigator() {
         })}
       />
       <Tab.Screen name="CommunityTab" component={CommunityStack} options={{ title: 'Community', tabBarIcon: tabIcon('👥') }} />
+      <Tab.Screen name="AssistantTab" component={AssistantScreen} options={{ title: 'Assistant', tabBarIcon: tabIcon('🤖') }} />
       <Tab.Screen name="ProfileTab" component={ProfileStack} options={{ title: 'Profile', tabBarIcon: tabIcon('👤') }} />
     </Tab.Navigator>
   );

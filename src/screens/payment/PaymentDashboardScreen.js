@@ -18,6 +18,7 @@ import {
   setHistoryFilters, resetPay, selectPaymentProperty,
 } from '../../store/slices/paymentSlice';
 import { paymentApi } from '../../api/paymentApi';
+import { downloadFile } from '../../services/downloader';
 import { showToast } from '../../utils/toastConfig';
 
 const TABS = [
@@ -59,8 +60,7 @@ export default function PaymentDashboardScreen() {
 
   const downloadStatement = () => {
     if (!propertyId) return;
-    Linking.openURL(paymentApi.statementUrl(propertyId, token)).catch(() =>
-      showToast('error', 'Could not open', 'Unable to open the statement.'));
+    downloadFile(paymentApi.statementUrl(propertyId, token), `Payment Statement ${propertyId}`);
   };
 
   const nextDue = schedule?.nextDue;

@@ -1,4 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
+import useChatOpen from '../hooks/useChatOpen';
 import { Text, StyleSheet, Pressable, Animated, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { activateSos, loadContacts } from '../store/slices/sosSlice';
@@ -11,6 +12,7 @@ const HOLD_MS = 3000;
 
 // Global red SOS button (overlay). 3-second hold to fire (anti-accidental).
 export default function FloatingSOSButton() {
+  const chatOpen = useChatOpen();
   const dispatch = useDispatch();
   const isLoggedIn = useSelector(s => s.auth.isLoggedIn);
   const activating = useSelector(s => s.sos.activating);
@@ -56,7 +58,7 @@ export default function FloatingSOSButton() {
     progress.setValue(0);
   };
 
-  if (!isLoggedIn) return null;
+  if (!isLoggedIn || chatOpen) return null;
 
   const ringWidth = progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
