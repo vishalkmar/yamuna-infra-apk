@@ -29,7 +29,7 @@ export default function CartScreen({ navigation }) {
   const startPay = async () => {
     try {
       setPaying(true);
-      const ord = await paymentApi.initiate({ foodOrder: true, amount: total, mode: 'cashfree', remarks: 'Food order' });
+      const ord = await paymentApi.checkout({ purpose: 'food', amount: total, remarks: 'Food order' });
       setPaying(false);
       setOrder(ord);
       setCheckoutOpen(true);
@@ -41,7 +41,13 @@ export default function CartScreen({ navigation }) {
 
   const onPaid = async () => {
     setCheckoutOpen(false);
-    try { await paymentApi.verify(order?.orderId); } catch (e) { /* ignore */ }
+    // Only place the order once Cashfree confirms the money actually arrived.
+    let paid = false;
+    try { paid = (await paymentApi.verifyCheckout(order?.orderId))?.status === 'paid'; } catch (e) { paid = false; }
+    if (!paid) {
+      showToast('warning', 'Payment not completed', 'Your cart is saved — no money was taken. Try again any time.');
+      return;
+    }
     try {
       const placed = await dispatch(placeFoodOrder({ items: cart, total })).unwrap();
       showToast('success', 'Order placed', `${placed.code} · ${formatINR(placed.total)}. Preparing your food!`);

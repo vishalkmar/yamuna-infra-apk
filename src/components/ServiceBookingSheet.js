@@ -91,10 +91,10 @@ export default function ServiceBookingSheet({ visible, category, categoryLabel, 
       // Wherever there's a price, take payment via Cashfree (test/sandbox).
       if (amount > 0) {
         setPaying(true);
-        const ord = await paymentApi.initiate({
-          serviceBookingId: res.id,
+        const ord = await paymentApi.checkout({
+          purpose: 'service',
+          refId: res.id,
           amount,
-          mode: 'cashfree',
           remarks: `${categoryLabel}${offering ? ' – ' + offering.name : ''}`,
         });
         setPaying(false);
@@ -114,7 +114,7 @@ export default function ServiceBookingSheet({ visible, category, categoryLabel, 
   const onPaid = async () => {
     setCheckoutOpen(false);
     try {
-      const r = await paymentApi.verify(order?.orderId);
+      const r = await paymentApi.verifyCheckout(order?.orderId);
       if (r?.status === 'paid') {
         showToast('success', 'Payment received', `${categoryLabel} confirmed. Receipt ${r.receiptCode || ''}`.trim());
       } else {

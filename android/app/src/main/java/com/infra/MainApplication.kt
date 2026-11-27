@@ -1,6 +1,7 @@
 package com.infra
 
 import android.app.Application
+import android.content.Context
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -18,6 +19,11 @@ class MainApplication : Application(), ReactApplication {
           // add(MyReactNativePackage())
         },
     )
+  }
+
+  // React Native reads font scale from the application context too.
+  override fun attachBaseContext(base: Context) {
+    super.attachBaseContext(FontScaleCap.wrap(base))
   }
 
   override fun onCreate() {

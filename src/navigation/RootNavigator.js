@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
-import SplashScreen from '../screens/auth/SplashScreen';
+import SplashScreen, { SPLASH_MS } from '../screens/auth/SplashScreen';
 import AuthStack from './AuthStack';
 import DrawerNavigator from './DrawerNavigator';
 
@@ -15,7 +15,7 @@ export default function RootNavigator() {
   // No manual navigation/reset — conditional rendering drives the flow, which
   // is what makes this reliable in release/Hermes builds.
   useEffect(() => {
-    const t = setTimeout(() => setBooting(false), 1200);
+    const t = setTimeout(() => setBooting(false), SPLASH_MS);
     return () => clearTimeout(t);
   }, []);
 

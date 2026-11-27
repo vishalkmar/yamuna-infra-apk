@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image, Animated, Easing } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ScreenContainer from '../../components/ScreenContainer';
@@ -16,6 +16,12 @@ export default function LoginScreen({ navigation }) {
   const loading = useSelector(s => s.auth.loading);
   const [email, setEmailVal] = useState('');
   const [error, setError] = useState('');
+  // Gentle entrance right after the splash: logo, then text, then the form.
+  const a = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
+  useEffect(() => {
+    Animated.stagger(120, a.map(v => Animated.timing(v, { toValue: 1, duration: 480, easing: Easing.out(Easing.cubic), useNativeDriver: true }))).start();
+  }, [a]);
+  const rise = v => ({ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }] });
 
   const onSubmit = async () => {
     const value = email.trim().toLowerCase();
@@ -42,20 +48,23 @@ export default function LoginScreen({ navigation }) {
     <ScreenContainer>
       <View>
         <View style={styles.header}>
-          <View style={styles.logoBadge}>
+          <Animated.View style={[styles.logoBadge, rise(a[0])]}>
             <Image
               source={require('../../../logo.png')}
               style={styles.logoImg}
               resizeMode="contain"
             />
-          </View>
-          <Text style={[typography.h1, styles.center]}>Welcome to Yamuna Infra</Text>
-          <Text style={[typography.bodyMuted, styles.center, { marginTop: 6 }]}>
-            Log in with your email to access your account.
-          </Text>
+          </Animated.View>
+          <Animated.View style={rise(a[1])}>
+            <Text style={styles.kicker}>RADHE RADHE 🙏</Text>
+            <Text style={[typography.h1, styles.center]}>Welcome to Shri Yamuna Infra</Text>
+            <Text style={[typography.bodyMuted, styles.center, { marginTop: 6 }]}>
+              Log in with your email to see your home, payments, services and more.
+            </Text>
+          </Animated.View>
         </View>
 
-        <View style={styles.form}>
+        <Animated.View style={[styles.form, styles.formCard, rise(a[2])]}>
           <Input
             label="Email"
             placeholder="you@example.com"
@@ -69,9 +78,9 @@ export default function LoginScreen({ navigation }) {
           <Button title="Send OTP" onPress={onSubmit} loading={loading} />
 
           <Text style={styles.hint}>
-            We'll email you a 6-digit verification code.
+            🔒 We'll email you a 6-digit verification code. Never share it with anyone.
           </Text>
-        </View>
+        </Animated.View>
       </View>
     </ScreenContainer>
   );
@@ -92,5 +101,10 @@ const styles = StyleSheet.create({
   },
   logoImg: { width: 72, height: 72 },
   form: { marginTop: spacing.md },
+  formCard: {
+    backgroundColor: '#fff', borderRadius: 18, padding: spacing.lg, borderWidth: 1, borderColor: palette.divider,
+    shadowColor: palette.primary, shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 3,
+  },
+  kicker: { fontFamily: FONT, textAlign: 'center', color: palette.accent, fontWeight: '700', fontSize: 12, letterSpacing: 1.2, marginBottom: 4 },
   hint: { fontFamily: FONT, marginTop: spacing.md, color: palette.textMuted, fontSize: 12, lineHeight: 18 },
 });

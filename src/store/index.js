@@ -31,7 +31,7 @@ import {
 } from './slices/miscSlices';
 import { registerStore } from '../api/client';
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   auth: authReducer,
   booking: bookingReducer,
   payment: paymentReducer,
@@ -58,6 +58,19 @@ const rootReducer = combineReducers({
   sos: sosReducer,
   notifications: notificationsSlice.reducer,
 });
+
+// Logging out wipes every slice, not just `auth`. Previously only the auth
+// slice was cleared, so signing in as a different account on the same app run
+// inherited the last user's property, payment and document state — which both
+// leaked their data on screen and pinned API calls to a property the new user
+// does not own (every such call then 404s). `_persist` is carried over so
+// redux-persist keeps working across the reset.
+const rootReducer = (state, action) => {
+  if (action.type === logout.type) {
+    return appReducer(state ? { _persist: state._persist } : undefined, action);
+  }
+  return appReducer(state, action);
+};
 
 const persistConfig = {
   key: 'root',

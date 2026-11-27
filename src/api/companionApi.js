@@ -38,7 +38,9 @@ export const companionApi = {
   // provider directly — a shipped key can be extracted from the build.
   sendChat: async message => {
     if (ENV.USE_MOCK_API) return mockApi.sendAiChat(message);
-    const { data } = await api.post('/ai/chat', { message });
+    // The backend may fall through several free-tier models (and Render may be
+    // waking from sleep), so give the concierge longer than ordinary calls.
+    const { data } = await api.post('/ai/chat', { message }, { timeout: 45000 });
     return data.data;
   },
   dailyContent: async () => {

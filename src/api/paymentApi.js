@@ -39,6 +39,18 @@ export const paymentApi = {
     return data.data;
   },
 
+  // One-off payment for a food order / cab ride / home service (Cashfree).
+  // purpose: 'food' | 'ride' | 'service'. Rides are priced server-side.
+  checkout: async ({ purpose, amount, refId, remarks }) => {
+    const { data } = await api.post('/payment/quick/initiate', { purpose, amount, refId: refId ?? null, remarks: remarks || '' });
+    return data.data;
+  },
+
+  verifyCheckout: async orderId => {
+    const { data } = await api.post('/payment/quick/verify', { orderId });
+    return data.data;
+  },
+
   // Authorized PDF link (token in query so the device browser can open it).
   statementUrl: (propertyId, token) =>
     `${ENV.API_BASE_URL}/payment-plan/property/${propertyId}/statement.pdf?token=${encodeURIComponent(token || '')}`,

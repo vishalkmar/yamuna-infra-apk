@@ -84,8 +84,8 @@ android {
         applicationId "com.yamunainfra.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "1.0.0"
+        versionCode 6
+        versionName "1.0.1"
     }
 
     // Release signing reads android/keystore.properties, which is gitignored so

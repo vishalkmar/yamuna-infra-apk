@@ -54,7 +54,7 @@ export default function TransportScreen() {
         vehicleType: chosen.type, distanceKm: chosen.distanceKm, fare: chosen.fare,
       })).unwrap();
       setPaying(true);
-      const ord = await paymentApi.initiate({ rideId: ride.id, amount: ride.fare, mode: 'cashfree', remarks: `Ride ${ride.code} · ${ride.dropName}` });
+      const ord = await paymentApi.checkout({ purpose: 'ride', refId: ride.id, amount: ride.fare, remarks: `Ride ${ride.code} · ${ride.dropName}` });
       setPaying(false);
       setOrder(ord);
       setCheckoutOpen(true);
@@ -67,7 +67,7 @@ export default function TransportScreen() {
   const finishOk = async () => {
     setCheckoutOpen(false);
     try {
-      const r = await paymentApi.verify(order?.orderId);
+      const r = await paymentApi.verifyCheckout(order?.orderId);
       showToast(r?.status === 'paid' ? 'success' : 'warning',
         r?.status === 'paid' ? 'Ride confirmed' : 'Ride booked — payment pending',
         r?.status === 'paid' ? 'Your driver will be assigned shortly.' : 'We are confirming your payment.');

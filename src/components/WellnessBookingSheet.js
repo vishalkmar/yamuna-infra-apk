@@ -11,6 +11,7 @@ import RadioGroup from './RadioGroup';
 import { palette, radius, spacing, typography } from '../theme';
 import { loadSlots, bookTherapy, clearSlots } from '../store/slices/wellnessSlice';
 import { showToast } from '../utils/toastConfig';
+import useQuickPay from '../hooks/useQuickPay';
 
 function minDate(now = new Date()) {
   const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
@@ -40,6 +41,7 @@ const schema = Yup.object().shape({
 const defaults = () => ({ durationMin: 60, therapistGender: 'any', date: minDate(), timeSlot: '', healthNote: '' });
 
 export default function WellnessBookingSheet({ visible, therapy, onClose, onBooked }) {
+  const pay = useQuickPay();
   const dispatch = useDispatch();
   const { slots, slotsLoading, bookBusy } = useSelector(s => s.wellness);
 
@@ -75,8 +77,10 @@ export default function WellnessBookingSheet({ visible, therapy, onClose, onBook
         res.isPackage ? 'Package activated!' : 'Booked!',
         res.isPackage ? `${therapy.name} course starts ${data.date}.` : `${therapy.name} on ${data.date} at ${data.timeSlot}.`,
       );
-      onBooked?.();
-      onClose();
+      const finish = () => { onBooked?.(); onClose(); };
+      if (Number(therapy.price) > 0) {
+        await pay.start({ purpose: 'service', amount: Number(therapy.price), refId: res.id, remarks: `Wellness · ${therapy.name}`, onDone: finish });
+      } else finish();
     } catch (e) {
       showToast('error', 'Could not book', String(e));
     }
@@ -85,6 +89,8 @@ export default function WellnessBookingSheet({ visible, therapy, onClose, onBook
   if (!therapy) return null;
 
   return (
+    <>
+    {pay.element}
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
@@ -142,6 +148,7 @@ export default function WellnessBookingSheet({ visible, therapy, onClose, onBook
         </View>
       </View>
     </Modal>
+    </>
   );
 }
 

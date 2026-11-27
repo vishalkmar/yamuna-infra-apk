@@ -11,6 +11,7 @@ import RadioGroup from './RadioGroup';
 import { palette, radius, spacing, typography } from '../theme';
 import { loadSlots, bookAppointment, clearSlots } from '../store/slices/healthcareSlice';
 import { showToast } from '../utils/toastConfig';
+import useQuickPay from '../hooks/useQuickPay';
 
 const CONSULTATION = [
   { value: 'video',  label: '📹 Video Call' },
@@ -35,6 +36,7 @@ const schema = Yup.object().shape({
 const defaults = () => ({ consultationType: 'video', date: todayIso(), timeSlot: '', symptoms: '', patientName: '', patientAge: '' });
 
 export default function AppointmentBookingSheet({ visible, doctor, onClose, onBooked }) {
+  const pay = useQuickPay();
   const dispatch = useDispatch();
   const { slots, slotsLoading, bookBusy } = useSelector(s => s.healthcare);
 
@@ -67,8 +69,10 @@ export default function AppointmentBookingSheet({ visible, doctor, onClose, onBo
         patientAge: Number(data.patientAge),
       })).unwrap();
       showToast('success', 'Appointment confirmed', `With ${doctor.name} on ${data.date} at ${data.timeSlot}. ${res.appointmentCode}`);
-      onBooked?.();
-      onClose();
+      const finish = () => { onBooked?.(); onClose(); };
+      if (Number(doctor.fee) > 0) {
+        await pay.start({ purpose: 'service', amount: Number(doctor.fee), refId: res.id, remarks: `Consultation ${res.appointmentCode || ''} · ${doctor.name}`, onDone: finish });
+      } else finish();
     } catch (e) {
       showToast('error', 'Could not book', String(e));
     }
@@ -77,6 +81,8 @@ export default function AppointmentBookingSheet({ visible, doctor, onClose, onBo
   if (!doctor) return null;
 
   return (
+    <>
+    {pay.element}
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
@@ -137,6 +143,7 @@ export default function AppointmentBookingSheet({ visible, doctor, onClose, onBo
         </View>
       </View>
     </Modal>
+    </>
   );
 }
 

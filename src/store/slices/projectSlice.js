@@ -57,8 +57,14 @@ const projectSlice = createSlice({
       .addCase(loadMyProperties.fulfilled, (state, action) => {
         state.propertiesLoading = false;
         state.properties = action.payload || [];
-        if (!state.selectedPropertyId && state.properties.length > 0) {
-          state.selectedPropertyId = state.properties[0].id;
+        // Only keep the current selection if it is actually one of this user's
+        // properties. A selection left over from another account points at a
+        // property they don't own, and every follow-up call 404s forever
+        // because the old code only filled this in when it was empty.
+        const stillOwned = state.properties.some(p => p.id === state.selectedPropertyId);
+        if (!stillOwned) {
+          state.selectedPropertyId = state.properties.length > 0 ? state.properties[0].id : null;
+          state.error = null;
         }
       })
       .addCase(loadMyProperties.rejected, (state, action) => {

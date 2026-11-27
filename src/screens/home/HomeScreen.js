@@ -14,9 +14,13 @@ import { loadMyProperties as loadPayProperties, loadSchedule as loadPaySchedule 
 // The -1 buffer avoids sub-pixel overflow that would wrap the last column.
 const GRID_GAP = 10;
 const SCREEN_W = Dimensions.get('window').width;
+// Everything is designed at 400dp wide and scaled down (never up) so the
+// home screen fits small/budget phones (320–360dp) without wrapping or clipping.
+const SCALE = Math.min(1, Math.max(0.8, SCREEN_W / 400));
+const ms = n => Math.round(n * SCALE);
 const colWidth = n => Math.floor((SCREEN_W - spacing.lg * 2 - GRID_GAP * (n - 1)) / n) - 1;
 const QUICK_W = colWidth(3);
-const SVC_W = colWidth(4);
+const SVC_W = colWidth(SCREEN_W < 340 ? 3 : 4);
 
 const QUICK_TILES = [
   { key: 'BookingDocket', label: 'Booking\nDocket', icon: '📘', tint: '#E8EEFF' },
@@ -82,23 +86,23 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.greetingRow}>
         <View style={{ flex: 1 }}>
           <Text style={typography.caption}>Welcome back,</Text>
-          <Text style={typography.h2}>{user?.name || 'Customer'} 👋</Text>
+          <Text style={styles.greetName} numberOfLines={1}>{user?.name || 'Customer'} 👋</Text>
         </View>
         <TouchableOpacity
           style={styles.bell}
           onPress={() => navigation.navigate('NotificationsScreen')}
         >
-          <Text style={{ fontSize: 20 }}>🔔</Text>
+          <Text style={{ fontSize: ms(18) }}>🔔</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('ConstructionTracker')}>
         <Card style={styles.heroCard}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <View>
+            <View style={{ flex: 1, paddingRight: spacing.sm }}>
               <Text style={styles.heroLabel}>YOUR UNIT</Text>
-              <Text style={styles.heroUnit}>{unitLabel}</Text>
-              <Text style={styles.heroProject}>{projectName}</Text>
+              <Text style={styles.heroUnit} numberOfLines={1} adjustsFontSizeToFit>{unitLabel}</Text>
+              <Text style={styles.heroProject} numberOfLines={1}>{projectName}</Text>
             </View>
             <StatusChip
               label={property?.workStatus === 'completed' ? 'COMPLETED' : 'ACTIVE'}
@@ -122,8 +126,8 @@ export default function HomeScreen({ navigation }) {
             <Text style={typography.caption}>NEXT DUE</Text>
             {nextDue ? (
               <>
-                <Text style={styles.dueAmount}>{formatINR(Number(nextDue.amount) + Number(nextDue.lateFee || 0))}</Text>
-                <Text style={typography.bodyMuted}>
+                <Text style={styles.dueAmount} numberOfLines={1} adjustsFontSizeToFit>{formatINR(Number(nextDue.amount) + Number(nextDue.lateFee || 0))}</Text>
+                <Text style={styles.dueMeta} numberOfLines={2}>
                   {nextDue.label} · {formatDate(nextDue.dueDate)}
                   {nextDue.dueDate ? ` · ${daysUntil(nextDue.dueDate) >= 0 ? `${daysUntil(nextDue.dueDate)} days left` : `${Math.abs(daysUntil(nextDue.dueDate))} days overdue`}` : ''}
                 </Text>
@@ -167,7 +171,7 @@ export default function HomeScreen({ navigation }) {
         style={styles.sos}
         onPress={() => navigation.navigate('SOSScreen')}
       >
-        <Text style={styles.sosText}>🚨  Emergency SOS — Hold to Activate</Text>
+        <Text style={styles.sosText} numberOfLines={1} adjustsFontSizeToFit>🚨  Emergency SOS — Hold to Activate</Text>
       </TouchableOpacity>
     </ScreenContainer>
   );
@@ -179,8 +183,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
+  greetName: { ...typography.h2, fontSize: ms(19) },
   bell: {
-    width: 44, height: 44, borderRadius: 22,
+    width: ms(40), height: ms(40), borderRadius: ms(20),
     backgroundColor: palette.surface,
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: palette.divider,
@@ -190,28 +195,29 @@ const styles = StyleSheet.create({
     borderColor: palette.primary,
     marginBottom: spacing.md,
   },
-  heroLabel: { color: '#A8B2D4', fontSize: 11, fontWeight: '700', letterSpacing: 0.8 },
-  heroUnit: { color: '#fff', fontSize: 26, fontWeight: '800', marginTop: 2 },
-  heroProject: { color: '#DBE3FF', fontSize: 13, marginTop: 2 },
+  heroLabel: { color: '#A8B2D4', fontSize: ms(10.5), fontWeight: '700', letterSpacing: 0.8 },
+  heroUnit: { color: '#fff', fontSize: ms(22), fontWeight: '800', marginTop: 2 },
+  heroProject: { color: '#DBE3FF', fontSize: ms(12.5), marginTop: 2 },
   progressBar: {
     height: 6,
     borderRadius: 3,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
     overflow: 'hidden',
   },
   progressFill: { height: '100%', backgroundColor: palette.accent },
-  progressLabel: { color: '#DBE3FF', fontSize: 12, marginTop: 8 },
+  progressLabel: { color: '#DBE3FF', fontSize: ms(11.5), marginTop: 6 },
 
   dueCard: { marginBottom: spacing.md },
-  dueAmount: { fontSize: 22, fontWeight: '800', color: palette.text, marginTop: 2 },
+  dueAmount: { fontSize: ms(20), fontWeight: '800', color: palette.text, marginTop: 2 },
+  dueMeta: { ...typography.bodyMuted, fontSize: ms(12.5) },
   payBtn: {
     backgroundColor: palette.primary,
-    paddingHorizontal: 18, paddingVertical: 10,
+    paddingHorizontal: ms(15), paddingVertical: ms(9), marginLeft: spacing.sm,
     borderRadius: radius.md,
     alignSelf: 'center',
   },
-  payBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  payBtnText: { color: '#fff', fontWeight: '700', fontSize: ms(12.5) },
 
   grid: {
     flexDirection: 'row',
@@ -220,11 +226,11 @@ const styles = StyleSheet.create({
   },
   tile: {
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: ms(6),
   },
   iconBadge: {
-    width: 54, height: 54,
-    borderRadius: 16,
+    width: ms(48), height: ms(48),
+    borderRadius: ms(14),
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
@@ -234,8 +240,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
   },
-  tileIcon: { fontSize: 26 },
-  tileLabel: { fontSize: 11.5, fontWeight: '600', color: palette.text, textAlign: 'center', lineHeight: 15 },
+  tileIcon: { fontSize: ms(22) },
+  // No fixed lineHeight: with a user font scale it would clip the 2nd line.
+  tileLabel: { fontSize: ms(11), fontWeight: '600', color: palette.text, textAlign: 'center' },
 
   sos: {
     marginTop: spacing.lg,
@@ -243,8 +250,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FCA5A5',
     borderRadius: radius.lg,
-    paddingVertical: 14,
+    paddingVertical: ms(12), paddingHorizontal: spacing.md,
     alignItems: 'center',
   },
-  sosText: { color: '#B91C1C', fontWeight: '700', fontSize: 14 },
+  sosText: { color: '#B91C1C', fontWeight: '700', fontSize: ms(13.5) },
 });

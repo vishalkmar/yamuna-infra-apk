@@ -13,6 +13,7 @@ import { palette, spacing, typography } from '../theme';
 import { bookAid } from '../store/slices/mobilitySlice';
 import { computeTotal } from '../utils/mobilityCost';
 import { showToast } from '../utils/toastConfig';
+import useQuickPay from '../hooks/useQuickPay';
 
 function todayIso() {
   const d = new Date();
@@ -30,6 +31,7 @@ const schema = Yup.object().shape({
 const defaults = () => ({ mode: 'rent', startDate: todayIso(), days: 7, withAttendant: false, deliveryNote: '' });
 
 export default function MobilityBookingSheet({ visible, aid, onClose, onBooked }) {
+  const pay = useQuickPay();
   const dispatch = useDispatch();
   const { bookBusy } = useSelector(s => s.mobility);
 
@@ -56,9 +58,11 @@ export default function MobilityBookingSheet({ visible, aid, onClose, onBooked }
         withAttendant: data.withAttendant,
         deliveryNote: data.deliveryNote || undefined,
       })).unwrap();
-      showToast('success', data.mode === 'buy' ? 'Purchased!' : 'Booked!', `${aid.name} · ₹${res.total}.`);
-      onBooked?.();
-      onClose();
+      showToast('success', data.mode === 'buy' ? 'Order placed!' : 'Booked!', `${aid.name} · ₹${res.total}.`);
+      const finish = () => { onBooked?.(); onClose(); };
+      if (Number(res.total) > 0) {
+        await pay.start({ purpose: 'service', amount: Number(res.total), refId: res.id, remarks: `Mobility · ${aid.name} (${data.mode})`, onDone: finish });
+      } else finish();
     } catch (e) {
       showToast('error', 'Could not book', String(e));
     }
@@ -67,6 +71,8 @@ export default function MobilityBookingSheet({ visible, aid, onClose, onBooked }
   if (!aid) return null;
 
   return (
+    <>
+    {pay.element}
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
@@ -129,6 +135,7 @@ export default function MobilityBookingSheet({ visible, aid, onClose, onBooked }
         </View>
       </View>
     </Modal>
+    </>
   );
 }
 

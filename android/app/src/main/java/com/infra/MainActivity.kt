@@ -1,5 +1,6 @@
 package com.infra
 
+import android.content.Context
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -12,6 +13,11 @@ class MainActivity : ReactActivity() {
    * rendering of the component.
    */
   override fun getMainComponentName(): String = "infra"
+
+  // Keep text readable but never layout-breaking (see FontScaleCap).
+  override fun attachBaseContext(newBase: Context) {
+    super.attachBaseContext(FontScaleCap.wrap(newBase))
+  }
 
   /**
    * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
